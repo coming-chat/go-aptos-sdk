@@ -12,16 +12,16 @@ var _ = (*ledgerInfoMarshaling)(nil)
 // MarshalJSON marshals as JSON.
 func (l LedgerInfo) MarshalJSON() ([]byte, error) {
 	type LedgerInfo struct {
-		ChainId         int    `json:"chain_id"`
-		LedgerVersion   Uint64 `json:"ledger_version" gencodec:"required"`
-		LedgerTimestamp Uint64 `json:"ledger_timestamp" gencodec:"required"`
-		Epoch           int    `json:"epoch"`
-		NodeRole        string `json:"node_role"`
+		ChainId         int        `json:"chain_id"`
+		LedgerVersion   jsonUint64 `json:"ledger_version" gencodec:"required"`
+		LedgerTimestamp jsonUint64 `json:"ledger_timestamp" gencodec:"required"`
+		Epoch           int        `json:"epoch"`
+		NodeRole        string     `json:"node_role"`
 	}
 	var enc LedgerInfo
 	enc.ChainId = l.ChainId
-	enc.LedgerVersion = Uint64(l.LedgerVersion)
-	enc.LedgerTimestamp = Uint64(l.LedgerTimestamp)
+	enc.LedgerVersion = jsonUint64(l.LedgerVersion)
+	enc.LedgerTimestamp = jsonUint64(l.LedgerTimestamp)
 	enc.Epoch = l.Epoch
 	enc.NodeRole = l.NodeRole
 	return json.Marshal(&enc)
@@ -30,11 +30,11 @@ func (l LedgerInfo) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals from JSON.
 func (l *LedgerInfo) UnmarshalJSON(input []byte) error {
 	type LedgerInfo struct {
-		ChainId         *int    `json:"chain_id"`
-		LedgerVersion   *Uint64 `json:"ledger_version" gencodec:"required"`
-		LedgerTimestamp *Uint64 `json:"ledger_timestamp" gencodec:"required"`
-		Epoch           *int    `json:"epoch"`
-		NodeRole        *string `json:"node_role"`
+		ChainId         *int        `json:"chain_id"`
+		LedgerVersion   *jsonUint64 `json:"ledger_version" gencodec:"required"`
+		LedgerTimestamp *jsonUint64 `json:"ledger_timestamp" gencodec:"required"`
+		Epoch           *int        `json:"epoch"`
+		NodeRole        *string     `json:"node_role"`
 	}
 	var dec LedgerInfo
 	if err := json.Unmarshal(input, &dec); err != nil {

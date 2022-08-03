@@ -8,15 +8,15 @@ import (
 )
 
 var (
-	bigT    = reflect.TypeOf((*Big)(nil))
-	uint64T = reflect.TypeOf(Uint64(0))
+	bigT    = reflect.TypeOf((*jsonBig)(nil))
+	uint64T = reflect.TypeOf(jsonUint64(0))
 )
 
-// Big represents a string number, eg "1659510704301760"
-type Big big.Int
+// jsonBig represents a string number, eg "1659510704301760"
+type jsonBig big.Int
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (b *Big) UnmarshalJSON(input []byte) error {
+func (b *jsonBig) UnmarshalJSON(input []byte) error {
 	if !isString(input) {
 		return errNonString(bigT)
 	}
@@ -24,22 +24,22 @@ func (b *Big) UnmarshalJSON(input []byte) error {
 	if !bo {
 		return errNonString(bigT)
 	}
-	*b = (Big)(*res)
+	*b = (jsonBig)(*res)
 	return nil
 }
 
-func (b *Big) MarshalJSON() ([]byte, error) {
+func (b *jsonBig) MarshalJSON() ([]byte, error) {
 	res := []byte{'"'}
 	res = append(res, []byte((*big.Int)(b).String())...)
 	res = append(res, '"')
 	return res, nil
 }
 
-// Uint64 marshals/unmarshals as a JSON string
-type Uint64 uint64
+// jsonUint64 marshals/unmarshals as a JSON string
+type jsonUint64 uint64
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (b *Uint64) UnmarshalJSON(input []byte) error {
+func (b *jsonUint64) UnmarshalJSON(input []byte) error {
 	if !isString(input) {
 		return errNonString(uint64T)
 	}
@@ -47,11 +47,11 @@ func (b *Uint64) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return toUnmarshalTypeError(err, uint64T)
 	}
-	*b = Uint64(res)
+	*b = jsonUint64(res)
 	return nil
 }
 
-func (b Uint64) MarshalJSON() ([]byte, error) {
+func (b jsonUint64) MarshalJSON() ([]byte, error) {
 	res := []byte{'"'}
 	res = strconv.AppendUint(res, uint64(b), 10)
 	res = append(res, '"')

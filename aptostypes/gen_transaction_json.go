@@ -14,25 +14,25 @@ func (t Transaction) MarshalJSON() ([]byte, error) {
 		Type                    string     `json:"type"`
 		Hash                    string     `json:"hash"`
 		Sender                  string     `json:"sender"`
-		SequenceNumber          Uint64     `json:"sequence_number"`
-		MaxGasAmount            Uint64     `json:"max_gas_amount"`
-		GasUnitPrice            Uint64     `json:"gas_unit_price"`
+		SequenceNumber          jsonUint64 `json:"sequence_number"`
+		MaxGasAmount            jsonUint64 `json:"max_gas_amount"`
+		GasUnitPrice            jsonUint64 `json:"gas_unit_price"`
 		GasCurrencyCode         string     `json:"gas_currency_code"`
-		ExpirationTimestampSecs Uint64     `json:"expiration_timestamp_secs"`
+		ExpirationTimestampSecs jsonUint64 `json:"expiration_timestamp_secs"`
 		Payload                 *Payload   `json:"payload"`
 		Signature               *Signature `json:"signature"`
 		Events                  []Event    `json:"events"`
-		Version                 Uint64     `json:"version"`
+		Version                 jsonUint64 `json:"version"`
 		StateRootHash           string     `json:"state_root_hash"`
 		EventRootHash           string     `json:"event_root_hash"`
-		GasUsed                 Uint64     `json:"gas_used"`
+		GasUsed                 jsonUint64 `json:"gas_used"`
 		Success                 bool       `json:"success"`
 		VmStatus                string     `json:"vm_status"`
 		AccumulatorRootHash     string     `json:"accumulator_root_hash"`
 		Changes                 []Change   `json:"changes"`
-		Timestamp               Uint64     `json:"timestamp"`
+		Timestamp               jsonUint64 `json:"timestamp"`
 		ID                      string     `json:"id"`
-		Round                   Uint64     `json:"round"`
+		Round                   jsonUint64 `json:"round"`
 		PreviousBlockVotes      []bool     `json:"previous_block_votes"`
 		Proposer                string     `json:"proposer"`
 	}
@@ -40,25 +40,25 @@ func (t Transaction) MarshalJSON() ([]byte, error) {
 	enc.Type = t.Type
 	enc.Hash = t.Hash
 	enc.Sender = t.Sender
-	enc.SequenceNumber = Uint64(t.SequenceNumber)
-	enc.MaxGasAmount = Uint64(t.MaxGasAmount)
-	enc.GasUnitPrice = Uint64(t.GasUnitPrice)
+	enc.SequenceNumber = jsonUint64(t.SequenceNumber)
+	enc.MaxGasAmount = jsonUint64(t.MaxGasAmount)
+	enc.GasUnitPrice = jsonUint64(t.GasUnitPrice)
 	enc.GasCurrencyCode = t.GasCurrencyCode
-	enc.ExpirationTimestampSecs = Uint64(t.ExpirationTimestampSecs)
+	enc.ExpirationTimestampSecs = jsonUint64(t.ExpirationTimestampSecs)
 	enc.Payload = t.Payload
 	enc.Signature = t.Signature
 	enc.Events = t.Events
 	enc.Version = t.Version
 	enc.StateRootHash = t.StateRootHash
 	enc.EventRootHash = t.EventRootHash
-	enc.GasUsed = Uint64(t.GasUsed)
+	enc.GasUsed = jsonUint64(t.GasUsed)
 	enc.Success = t.Success
 	enc.VmStatus = t.VmStatus
 	enc.AccumulatorRootHash = t.AccumulatorRootHash
 	enc.Changes = t.Changes
-	enc.Timestamp = Uint64(t.Timestamp)
+	enc.Timestamp = jsonUint64(t.Timestamp)
 	enc.ID = t.ID
-	enc.Round = Uint64(t.Round)
+	enc.Round = jsonUint64(t.Round)
 	enc.PreviousBlockVotes = t.PreviousBlockVotes
 	enc.Proposer = t.Proposer
 	return json.Marshal(&enc)
@@ -67,30 +67,30 @@ func (t Transaction) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals from JSON.
 func (t *Transaction) UnmarshalJSON(input []byte) error {
 	type Transaction struct {
-		Type                    *string    `json:"type"`
-		Hash                    *string    `json:"hash"`
-		Sender                  *string    `json:"sender"`
-		SequenceNumber          *Uint64    `json:"sequence_number"`
-		MaxGasAmount            *Uint64    `json:"max_gas_amount"`
-		GasUnitPrice            *Uint64    `json:"gas_unit_price"`
-		GasCurrencyCode         *string    `json:"gas_currency_code"`
-		ExpirationTimestampSecs *Uint64    `json:"expiration_timestamp_secs"`
-		Payload                 *Payload   `json:"payload"`
-		Signature               *Signature `json:"signature"`
-		Events                  []Event    `json:"events"`
-		Version                 *Uint64    `json:"version"`
-		StateRootHash           *string    `json:"state_root_hash"`
-		EventRootHash           *string    `json:"event_root_hash"`
-		GasUsed                 *Uint64    `json:"gas_used"`
-		Success                 *bool      `json:"success"`
-		VmStatus                *string    `json:"vm_status"`
-		AccumulatorRootHash     *string    `json:"accumulator_root_hash"`
-		Changes                 []Change   `json:"changes"`
-		Timestamp               *Uint64    `json:"timestamp"`
-		ID                      *string    `json:"id"`
-		Round                   *Uint64    `json:"round"`
-		PreviousBlockVotes      []bool     `json:"previous_block_votes"`
-		Proposer                *string    `json:"proposer"`
+		Type                    *string     `json:"type"`
+		Hash                    *string     `json:"hash"`
+		Sender                  *string     `json:"sender"`
+		SequenceNumber          *jsonUint64 `json:"sequence_number"`
+		MaxGasAmount            *jsonUint64 `json:"max_gas_amount"`
+		GasUnitPrice            *jsonUint64 `json:"gas_unit_price"`
+		GasCurrencyCode         *string     `json:"gas_currency_code"`
+		ExpirationTimestampSecs *jsonUint64 `json:"expiration_timestamp_secs"`
+		Payload                 *Payload    `json:"payload"`
+		Signature               *Signature  `json:"signature"`
+		Events                  []Event     `json:"events"`
+		Version                 *jsonUint64 `json:"version"`
+		StateRootHash           *string     `json:"state_root_hash"`
+		EventRootHash           *string     `json:"event_root_hash"`
+		GasUsed                 *jsonUint64 `json:"gas_used"`
+		Success                 *bool       `json:"success"`
+		VmStatus                *string     `json:"vm_status"`
+		AccumulatorRootHash     *string     `json:"accumulator_root_hash"`
+		Changes                 []Change    `json:"changes"`
+		Timestamp               *jsonUint64 `json:"timestamp"`
+		ID                      *string     `json:"id"`
+		Round                   *jsonUint64 `json:"round"`
+		PreviousBlockVotes      []bool      `json:"previous_block_votes"`
+		Proposer                *string     `json:"proposer"`
 	}
 	var dec Transaction
 	if err := json.Unmarshal(input, &dec); err != nil {

@@ -26,8 +26,8 @@ type LedgerInfo struct {
 }
 
 type ledgerInfoMarshaling struct {
-	LedgerVersion   Uint64
-	LedgerTimestamp Uint64
+	LedgerVersion   jsonUint64
+	LedgerTimestamp jsonUint64
 }
 
 //go:generate go run github.com/fjl/gencodec -type Transaction -field-override transactionMarshaling -out gen_transaction_json.go
@@ -45,15 +45,15 @@ type Transaction struct {
 	Payload                 *Payload   `json:"payload"`                   // PendingTransaction|GenesisTransaction|UserTransaction
 	Signature               *Signature `json:"signature"`                 // PendingTransaction|UserTransaction
 
-	Events              []Event  `json:"events"`                // GenesisTransaction|UserTransaction
-	Version             Uint64   `json:"version"`               // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
-	StateRootHash       string   `json:"state_root_hash"`       // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
-	EventRootHash       string   `json:"event_root_hash"`       // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
-	GasUsed             uint64   `json:"gas_used"`              // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
-	Success             bool     `json:"success"`               // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
-	VmStatus            string   `json:"vm_status"`             // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
-	AccumulatorRootHash string   `json:"accumulator_root_hash"` // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
-	Changes             []Change `json:"changes"`               // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
+	Events              []Event    `json:"events"`                // GenesisTransaction|UserTransaction
+	Version             jsonUint64 `json:"version"`               // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
+	StateRootHash       string     `json:"state_root_hash"`       // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
+	EventRootHash       string     `json:"event_root_hash"`       // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
+	GasUsed             uint64     `json:"gas_used"`              // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
+	Success             bool       `json:"success"`               // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
+	VmStatus            string     `json:"vm_status"`             // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
+	AccumulatorRootHash string     `json:"accumulator_root_hash"` // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
+	Changes             []Change   `json:"changes"`               // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
 
 	Timestamp uint64 `json:"timestamp"` // UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
 
@@ -64,14 +64,14 @@ type Transaction struct {
 }
 
 type transactionMarshaling struct {
-	SequenceNumber          Uint64
-	MaxGasAmount            Uint64
-	GasUnitPrice            Uint64
-	ExpirationTimestampSecs Uint64
-	GasUsed                 Uint64
-	Version                 Uint64
-	Round                   Uint64
-	Timestamp               Uint64
+	SequenceNumber          jsonUint64
+	MaxGasAmount            jsonUint64
+	GasUnitPrice            jsonUint64
+	ExpirationTimestampSecs jsonUint64
+	GasUsed                 jsonUint64
+	Version                 jsonUint64
+	Round                   jsonUint64
+	Timestamp               jsonUint64
 }
 
 type Payload struct {
@@ -165,11 +165,6 @@ type (
 		Handle string `json:"handle"`
 		Key    string `json:"key"`
 	}
-
-	AccountResource struct {
-		Type string      `json:"type"` // move type, match: ^0x[0-9a-zA-Z:_<>]+$
-		Data interface{} `json:"data"`
-	}
 )
 
 type Event struct {
@@ -192,4 +187,20 @@ type Signature struct {
 	Sender                   *Signature  `json:"Sender"`                     // multi_agent_signature
 	SecondarySignerAddresses []string    `json:"secondary_signer_addresses"` // multi_agent_signature
 	SecondarySigners         []Signature `json:"secondary_signers"`          // multi_agent_signature
+}
+
+//go:generate go run github.com/fjl/gencodec -type AccountCoreData -field-override AccountCoreDataMarshaling -out gen_account_core_json.go
+
+type AccountCoreData struct {
+	SequenceNumber    uint64 `json:"sequence_number"`
+	AuthenticationKey string `json:"authentication_key"`
+}
+
+type AccountCoreDataMarshaling struct {
+	SequenceNumber jsonUint64
+}
+
+type AccountResource struct {
+	Type string      `json:"type"` // match ^0x[0-9a-zA-Z:_<>]+$
+	Data interface{} `json:"data"`
 }
