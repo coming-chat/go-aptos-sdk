@@ -5,7 +5,6 @@ package aptostypes
 import (
 	"encoding/json"
 	"errors"
-	"math/big"
 )
 
 var _ = (*ledgerInfoMarshaling)(nil)
@@ -14,15 +13,15 @@ var _ = (*ledgerInfoMarshaling)(nil)
 func (l LedgerInfo) MarshalJSON() ([]byte, error) {
 	type LedgerInfo struct {
 		ChainId         int    `json:"chain_id"`
-		LedgerVersion   *Big   `json:"ledger_version" gencodec:"required"`
-		LedgerTimestamp *Big   `json:"ledger_timestamp" gencodec:"required"`
+		LedgerVersion   Uint64 `json:"ledger_version" gencodec:"required"`
+		LedgerTimestamp Uint64 `json:"ledger_timestamp" gencodec:"required"`
 		Epoch           int    `json:"epoch"`
 		NodeRole        string `json:"node_role"`
 	}
 	var enc LedgerInfo
 	enc.ChainId = l.ChainId
-	enc.LedgerVersion = (*Big)(l.LedgerVersion)
-	enc.LedgerTimestamp = (*Big)(l.LedgerTimestamp)
+	enc.LedgerVersion = Uint64(l.LedgerVersion)
+	enc.LedgerTimestamp = Uint64(l.LedgerTimestamp)
 	enc.Epoch = l.Epoch
 	enc.NodeRole = l.NodeRole
 	return json.Marshal(&enc)
@@ -32,8 +31,8 @@ func (l LedgerInfo) MarshalJSON() ([]byte, error) {
 func (l *LedgerInfo) UnmarshalJSON(input []byte) error {
 	type LedgerInfo struct {
 		ChainId         *int    `json:"chain_id"`
-		LedgerVersion   *Big    `json:"ledger_version" gencodec:"required"`
-		LedgerTimestamp *Big    `json:"ledger_timestamp" gencodec:"required"`
+		LedgerVersion   *Uint64 `json:"ledger_version" gencodec:"required"`
+		LedgerTimestamp *Uint64 `json:"ledger_timestamp" gencodec:"required"`
 		Epoch           *int    `json:"epoch"`
 		NodeRole        *string `json:"node_role"`
 	}
@@ -47,11 +46,11 @@ func (l *LedgerInfo) UnmarshalJSON(input []byte) error {
 	if dec.LedgerVersion == nil {
 		return errors.New("missing required field 'ledger_version' for LedgerInfo")
 	}
-	l.LedgerVersion = (*big.Int)(dec.LedgerVersion)
+	l.LedgerVersion = uint64(*dec.LedgerVersion)
 	if dec.LedgerTimestamp == nil {
 		return errors.New("missing required field 'ledger_timestamp' for LedgerInfo")
 	}
-	l.LedgerTimestamp = (*big.Int)(dec.LedgerTimestamp)
+	l.LedgerTimestamp = uint64(*dec.LedgerTimestamp)
 	if dec.Epoch != nil {
 		l.Epoch = *dec.Epoch
 	}

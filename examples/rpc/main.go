@@ -25,4 +25,12 @@ func main() {
 		panic(err)
 	}
 	fmt.Println(string(content))
+
+	transactions, err := client.GetTransactions(ledgerInfo.LedgerVersion-10, 10)
+	if err != nil {
+		panic(err)
+	}
+	for _, tx := range transactions {
+		fmt.Printf("type: %s, hash: %s\n", tx.Type, tx.Hash)
+	}
 }
