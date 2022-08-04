@@ -3,7 +3,6 @@ package aptosclient
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -79,7 +78,9 @@ func handleResponse(result interface{}, resp *http.Response) error {
 		return err
 	}
 	if resp.StatusCode >= 400 {
-		return fmt.Errorf("code:%d,body:%s", resp.StatusCode, string(body)) // todo 定制 error
+		restError := &aptostypes.RestError{}
+		json.Unmarshal(body, &restError)
+		return restError
 	}
 	return json.Unmarshal(body, &result)
 }

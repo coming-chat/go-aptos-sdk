@@ -13,6 +13,22 @@ const (
 	WriteSetPayload       = "write_set_payload"
 )
 
+//go:generate go run github.com/fjl/gencodec -type RestError -field-override restErrorMarshaling -out gen_rest_error_json.go
+
+type RestError struct {
+	Code               int    `json:"code"`
+	Message            string `json:"message"`
+	AptosLedgerVersion uint64 `json:"aptos_ledger_version"`
+}
+
+func (e *RestError) Error() string {
+	return e.Message
+}
+
+type restErrorMarshaling struct {
+	AptosLedgerVersion jsonUint64
+}
+
 //go:generate go run github.com/fjl/gencodec -type LedgerInfo -field-override ledgerInfoMarshaling -out gen_ledger_json.go
 
 // LedgerInfo represents chain current ledger info

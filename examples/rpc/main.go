@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 
 	"github.com/coming-chat/go-aptos/aptosclient"
+	"github.com/coming-chat/go-aptos/aptostypes"
 )
 
 const rpcUrl = "https://fullnode.devnet.aptoslabs.com"
@@ -15,7 +17,7 @@ func main() {
 	ctx := context.Background()
 	client, err := aptosclient.Dial(ctx, rpcUrl)
 	if err != nil {
-		panic(err)
+		printError(err)
 	}
 	ledgerInfo, err := client.LedgerInfo()
 	if err != nil {
@@ -23,13 +25,13 @@ func main() {
 	}
 	content, err := json.Marshal(ledgerInfo)
 	if err != nil {
-		panic(err)
+		printError(err)
 	}
 	fmt.Println(string(content))
 
 	transactions, err := client.GetTransactions(ledgerInfo.LedgerVersion-10, 10)
 	if err != nil {
-		panic(err)
+		printError(err)
 	}
 	printLine("get tx list")
 	for _, tx := range transactions {
@@ -39,7 +41,7 @@ func main() {
 	account := "0xa1f475d2190bb689fa68804bb0be954c640d582290fbb49aa05c4d438c989603"
 	accountTransactions, err := client.GetAccountTransactions(account, 1, 10)
 	if err != nil {
-		panic(err)
+		printError(err)
 	}
 	printLine("get account tx list")
 	for _, tx := range accountTransactions {
@@ -49,27 +51,27 @@ func main() {
 	txHash := "0x95f1df00314e740a71acb66aeb7dff0182f7510bf900c356db91318b8952ed1d"
 	tx, err := client.GetTransaction(txHash)
 	if err != nil {
-		panic(err)
+		printError(err)
 	}
 	printLine("get tx by hash")
 	fmt.Printf("type: %s, hash: %s, version: %d\n", tx.Type, tx.Hash, tx.Version)
 
 	tx, err = client.GetTransaction(strconv.FormatUint(6047729, 10))
 	if err != nil {
-		panic(err)
+		printError(err)
 	}
 	printLine("get tx by version")
 	fmt.Printf("type: %s, hash: %s, version: %d\n", tx.Type, tx.Hash, tx.Version)
 
 	accountCore, err := client.GetAccount(account)
 	if err != nil {
-		panic(err)
+		printError(err)
 	}
 	fmt.Printf("seqNum: %d, key: %s\n", accountCore.SequenceNumber, accountCore.AuthenticationKey)
 
 	accountResources, err := client.GetAccountResources(account)
 	if err != nil {
-		panic(err)
+		printError(err)
 	}
 	printLine("account resource")
 	for _, resource := range accountResources {
@@ -79,14 +81,14 @@ func main() {
 	resourceType := "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
 	resource, err := client.GetAccountResource(account, resourceType, 0)
 	if err != nil {
-		panic(err)
+		printError(err)
 	}
 	fmt.Printf("resourceType: %s\n, data: %v\n", resource.Type, resource.Data)
 
 	accountWithModule := "0xe72ca8ac40bb39bf4cf6d5abf8655015e3fce0f0a5e4218935355625eb0224a3"
 	accountModules, err := client.GetAccountModules(accountWithModule, 0)
 	if err != nil {
-		panic(err)
+		printError(err)
 	}
 	printLine("account modules")
 	for _, module := range accountModules {
@@ -95,7 +97,7 @@ func main() {
 
 	accountModule, err := client.GetAccountModule(accountWithModule, "message", 0)
 	if err != nil {
-		panic(err)
+		printError(err)
 	}
 	printLine("account module")
 	fmt.Printf("abi:%s, name:%s\n", accountModule.Abi.Address, accountModule.Abi.Name)
@@ -103,7 +105,7 @@ func main() {
 	eventKey := "0x0100000000000000874342f90ed0c0ccdf7baa13309820133ef94f143bb4a68069ceae8a8658541a"
 	events, err := client.GetEventsByKey(eventKey)
 	if err != nil {
-		panic(err)
+		printError(err)
 	}
 	printLine("events by key")
 	for _, event := range events {
@@ -115,14 +117,29 @@ func main() {
 	fieldName := "message_change_events"
 	events, err = client.GetEventsByEventHandle(addressWithEvent, eventHandleStruct, fieldName, 0, 0)
 	if err != nil {
-		panic(err)
+		printError(err)
 	}
 	printLine("events by address/handle/field")
 	for _, event := range events {
 		fmt.Printf("key: %s, seqNum: %d, type: %s\n", event.Key, event.SequenceNumber, event.Type)
 	}
+
+	printLine("error test")
+	_, err = client.GetEventsByEventHandle("0x123", eventHandleStruct, fieldName, 0, 0)
+	if err != nil {
+		printError(err)
+	}
 }
 
 func printLine(content string) {
 	fmt.Printf("================= %s =================\n", content)
+}
+
+func printError(err error) {
+	var restError *aptostypes.RestError
+	if b := errors.As(err, &restError); b {
+		fmt.Printf("code: %d, message: %s, aptos_ledger_version: %d\n", restError.Code, restError.Message, restError.AptosLedgerVersion)
+	} else {
+		fmt.Printf("err: %s\n", err.Error())
+	}
 }
