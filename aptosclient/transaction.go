@@ -13,8 +13,12 @@ func (c *RestClient) GetTransactions(start, limit uint64) (res []aptostypes.Tran
 		return
 	}
 	q := req.URL.Query()
-	q.Add("start", strconv.FormatUint(start, 10))
-	q.Add("limit", strconv.FormatUint(limit, 10))
+	if start > 0 {
+		q.Add("start", strconv.FormatUint(start, 10))
+	}
+	if limit > 0 {
+		q.Add("limit", strconv.FormatUint(limit, 10))
+	}
 	req.URL.RawQuery = q.Encode()
 	err = doReq(req, &res)
 	return
@@ -26,8 +30,12 @@ func (c *RestClient) GetAccountTransactions(account string, start, limit uint64)
 		return
 	}
 	q := req.URL.Query()
-	q.Add("start", strconv.FormatUint(start, 10))
-	q.Add("limit", strconv.FormatUint(limit, 10))
+	if start > 0 {
+		q.Add("start", strconv.FormatUint(start, 10))
+	}
+	if limit > 0 {
+		q.Add("limit", strconv.FormatUint(limit, 10))
+	}
 	req.URL.RawQuery = q.Encode()
 	err = doReq(req, &res)
 	return

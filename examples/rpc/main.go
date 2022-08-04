@@ -73,7 +73,7 @@ func main() {
 	}
 	printLine("account resource")
 	for _, resource := range accountResources {
-		fmt.Printf("resourceType: %s\n, data: %v", resource.Type, resource.Data)
+		fmt.Printf("resourceType: %s, data: %v\n", resource.Type, resource.Data)
 	}
 
 	resourceType := "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
@@ -81,8 +81,46 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("resourceType: %s\n, data: %v", resource.Type, resource.Data)
+	fmt.Printf("resourceType: %s\n, data: %v\n", resource.Type, resource.Data)
 
+	accountWithModule := "0xe72ca8ac40bb39bf4cf6d5abf8655015e3fce0f0a5e4218935355625eb0224a3"
+	accountModules, err := client.GetAccountModules(accountWithModule, 0)
+	if err != nil {
+		panic(err)
+	}
+	printLine("account modules")
+	for _, module := range accountModules {
+		fmt.Printf("abi:%s, name:%s\n", module.Abi.Address, module.Abi.Name)
+	}
+
+	accountModule, err := client.GetAccountModule(accountWithModule, "message", 0)
+	if err != nil {
+		panic(err)
+	}
+	printLine("account module")
+	fmt.Printf("abi:%s, name:%s\n", accountModule.Abi.Address, accountModule.Abi.Name)
+
+	eventKey := "0x0100000000000000874342f90ed0c0ccdf7baa13309820133ef94f143bb4a68069ceae8a8658541a"
+	events, err := client.GetEventsByKey(eventKey)
+	if err != nil {
+		panic(err)
+	}
+	printLine("events by key")
+	for _, event := range events {
+		fmt.Printf("key: %s, seqNum: %d, type: %s\n", event.Key, event.SequenceNumber, event.Type)
+	}
+
+	addressWithEvent := "0x647040d2018e65ae91a2353125a06a7b58917c523bef4e775237a814e464918c"
+	eventHandleStruct := "0x647040d2018e65ae91a2353125a06a7b58917c523bef4e775237a814e464918c::message::MessageHolder"
+	fieldName := "message_change_events"
+	events, err = client.GetEventsByEventHandle(addressWithEvent, eventHandleStruct, fieldName, 0, 0)
+	if err != nil {
+		panic(err)
+	}
+	printLine("events by address/handle/field")
+	for _, event := range events {
+		fmt.Printf("key: %s, seqNum: %d, type: %s\n", event.Key, event.SequenceNumber, event.Type)
+	}
 }
 
 func printLine(content string) {

@@ -116,7 +116,7 @@ type (
 		Name             string         `json:"name"`
 		Friend           []string       `json:"friend"`
 		ExposedFunctions []MoveFunction `json:"exposed_functions"`
-		Structs          *MoveStruct    `json:"structs"`
+		Structs          []MoveStruct   `json:"structs"`
 	}
 
 	MoveStruct struct {
@@ -167,11 +167,17 @@ type (
 	}
 )
 
+//go:generate go run github.com/fjl/gencodec -type Event -field-override eventMarshaling -out gen_event_json.go
+
 type Event struct {
 	Key            string      `json:"key"`
-	SequenceNumber string      `json:"sequence_number"`
+	SequenceNumber uint64      `json:"sequence_number"`
 	Type           string      `json:"type"` // eg. 0x1::aptos_coin::AptosCoin, match ^(bool|u8|u64|u128|address|signer|vector<.+>|0x[0-9a-zA-Z:_<, >]+)$
 	Data           interface{} `json:"data"`
+}
+
+type eventMarshaling struct {
+	SequenceNumber jsonUint64
 }
 
 type Signature struct {
