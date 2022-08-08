@@ -15,14 +15,14 @@ func (l LedgerInfo) MarshalJSON() ([]byte, error) {
 		ChainId         int        `json:"chain_id"`
 		LedgerVersion   jsonUint64 `json:"ledger_version" gencodec:"required"`
 		LedgerTimestamp jsonUint64 `json:"ledger_timestamp" gencodec:"required"`
-		Epoch           int        `json:"epoch"`
+		Epoch           jsonUint64 `json:"epoch"`
 		NodeRole        string     `json:"node_role"`
 	}
 	var enc LedgerInfo
 	enc.ChainId = l.ChainId
 	enc.LedgerVersion = jsonUint64(l.LedgerVersion)
 	enc.LedgerTimestamp = jsonUint64(l.LedgerTimestamp)
-	enc.Epoch = l.Epoch
+	enc.Epoch = jsonUint64(l.Epoch)
 	enc.NodeRole = l.NodeRole
 	return json.Marshal(&enc)
 }
@@ -33,7 +33,7 @@ func (l *LedgerInfo) UnmarshalJSON(input []byte) error {
 		ChainId         *int        `json:"chain_id"`
 		LedgerVersion   *jsonUint64 `json:"ledger_version" gencodec:"required"`
 		LedgerTimestamp *jsonUint64 `json:"ledger_timestamp" gencodec:"required"`
-		Epoch           *int        `json:"epoch"`
+		Epoch           *jsonUint64 `json:"epoch"`
 		NodeRole        *string     `json:"node_role"`
 	}
 	var dec LedgerInfo
@@ -52,7 +52,7 @@ func (l *LedgerInfo) UnmarshalJSON(input []byte) error {
 	}
 	l.LedgerTimestamp = uint64(*dec.LedgerTimestamp)
 	if dec.Epoch != nil {
-		l.Epoch = *dec.Epoch
+		l.Epoch = uint64(*dec.Epoch)
 	}
 	if dec.NodeRole != nil {
 		l.NodeRole = *dec.NodeRole

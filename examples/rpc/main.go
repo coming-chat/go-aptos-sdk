@@ -29,13 +29,13 @@ func main() {
 	}
 	fmt.Println(string(content))
 
-	transactions, err := client.GetTransactions(ledgerInfo.LedgerVersion-10, 10)
+	transactions, err := client.GetTransactions(1, 10)
 	if err != nil {
 		printError(err)
 	}
 	printLine("get tx list")
 	for _, tx := range transactions {
-		fmt.Printf("type: %s, hash: %s\n", tx.Type, tx.Hash)
+		fmt.Printf("version: %d, type: %s, hash: %s, round: %d, time: %d\n", tx.Version, tx.Type, tx.Hash, tx.Round, tx.Timestamp)
 	}
 
 	account := "0xa1f475d2190bb689fa68804bb0be954c640d582290fbb49aa05c4d438c989603"
@@ -96,11 +96,12 @@ func main() {
 	}
 
 	accountModule, err := client.GetAccountModule(accountWithModule, "message", 0)
+	printLine("account module")
 	if err != nil {
 		printError(err)
+	} else {
+		fmt.Printf("abi:%s, name:%s\n", accountModule.Abi.Address, accountModule.Abi.Name)
 	}
-	printLine("account module")
-	fmt.Printf("abi:%s, name:%s\n", accountModule.Abi.Address, accountModule.Abi.Name)
 
 	eventKey := "0x0100000000000000874342f90ed0c0ccdf7baa13309820133ef94f143bb4a68069ceae8a8658541a"
 	events, err := client.GetEventsByKey(eventKey)

@@ -37,11 +37,12 @@ type LedgerInfo struct {
 	LedgerVersion   uint64 `json:"ledger_version" gencodec:"required"`
 	LedgerTimestamp uint64 `json:"ledger_timestamp" gencodec:"required"`
 
-	Epoch    int    `json:"epoch"`
+	Epoch    uint64 `json:"epoch"`
 	NodeRole string `json:"node_role"`
 }
 
 type ledgerInfoMarshaling struct {
+	Epoch           jsonUint64
 	LedgerVersion   jsonUint64
 	LedgerTimestamp jsonUint64
 }
