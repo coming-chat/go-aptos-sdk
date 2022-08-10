@@ -48,7 +48,7 @@ func (t Transaction) MarshalJSON() ([]byte, error) {
 	enc.Payload = t.Payload
 	enc.Signature = t.Signature
 	enc.Events = t.Events
-	enc.Version = t.Version
+	enc.Version = jsonUint64(t.Version)
 	enc.StateRootHash = t.StateRootHash
 	enc.EventRootHash = t.EventRootHash
 	enc.GasUsed = jsonUint64(t.GasUsed)
@@ -130,7 +130,7 @@ func (t *Transaction) UnmarshalJSON(input []byte) error {
 		t.Events = dec.Events
 	}
 	if dec.Version != nil {
-		t.Version = *dec.Version
+		t.Version = uint64(*dec.Version)
 	}
 	if dec.StateRootHash != nil {
 		t.StateRootHash = *dec.StateRootHash

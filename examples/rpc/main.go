@@ -38,7 +38,7 @@ func main() {
 		fmt.Printf("version: %d, type: %s, hash: %s, round: %d, time: %d\n", tx.Version, tx.Type, tx.Hash, tx.Round, tx.Timestamp)
 	}
 
-	account := "0xa1f475d2190bb689fa68804bb0be954c640d582290fbb49aa05c4d438c989603"
+	account := "0x68fd7b5e581d2a95c5dbba09b9c19879c7a934f4f4cfda1d5008cc793660c8ee"
 	accountTransactions, err := client.GetAccountTransactions(account, 1, 10)
 	if err != nil {
 		printError(err)
@@ -48,7 +48,7 @@ func main() {
 		fmt.Printf("type: %s, hash: %s, version: %d\n", tx.Type, tx.Hash, tx.Version)
 	}
 
-	txHash := "0x95f1df00314e740a71acb66aeb7dff0182f7510bf900c356db91318b8952ed1d"
+	txHash := "0xe1163f7b33df37995c9724b179b4d4a0fdff9eb2ef0c38a8d6e2982ce1c1de22"
 	tx, err := client.GetTransaction(txHash)
 	if err != nil {
 		printError(err)
@@ -56,12 +56,26 @@ func main() {
 	printLine("get tx by hash")
 	fmt.Printf("type: %s, hash: %s, version: %d\n", tx.Type, tx.Hash, tx.Version)
 
-	tx, err = client.GetTransaction(strconv.FormatUint(6047729, 10))
+	if tx.Type == aptostypes.TypeUserTransaction {
+		userTx := tx.AsUserTransaction()
+		fmt.Printf("type: %s, hash: %s, version: %d\n", userTx.Type, userTx.Hash, userTx.Version)
+	}
+
+	tx, err = client.GetTransaction(strconv.FormatUint(tx.Version, 10))
 	if err != nil {
 		printError(err)
 	}
 	printLine("get tx by version")
 	fmt.Printf("type: %s, hash: %s, version: %d\n", tx.Type, tx.Hash, tx.Version)
+
+	tx, err = client.GetTransaction(strconv.FormatUint(6618578, 10))
+	if err != nil {
+		printError(err)
+	}
+	if tx.Type == aptostypes.TypeBlockMetadataTransaction {
+		blockTx := tx.AsBlockMetadataTransaction()
+		fmt.Printf("type: %s, hash: %s, version: %d, id: %s\n", blockTx.Type, blockTx.Hash, blockTx.Version, blockTx.ID)
+	}
 
 	accountCore, err := client.GetAccount(account)
 	if err != nil {

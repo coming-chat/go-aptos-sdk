@@ -1,12 +1,6 @@
 package aptostypes
 
 const (
-	PendingTransaction            = "pending_transaction"
-	GenesisTransaction            = "genesis_transaction"
-	UserTransaction               = "user_transaction"
-	BlockMetadataTransaction      = "block_metadata_transaction"
-	StateCheckoutpointTransaction = "state_checkpoint_transaction"
-
 	ScriptFunctionPayload = "script_function_payload"
 	ScriptPayload         = "script_payload"
 	ModuleBundlePayload   = "module_bundle_payload"
@@ -62,15 +56,15 @@ type Transaction struct {
 	Payload                 *Payload   `json:"payload"`                   // PendingTransaction|GenesisTransaction|UserTransaction
 	Signature               *Signature `json:"signature"`                 // PendingTransaction|UserTransaction
 
-	Events              []Event    `json:"events"`                // GenesisTransaction|UserTransaction
-	Version             jsonUint64 `json:"version"`               // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
-	StateRootHash       string     `json:"state_root_hash"`       // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
-	EventRootHash       string     `json:"event_root_hash"`       // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
-	GasUsed             uint64     `json:"gas_used"`              // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
-	Success             bool       `json:"success"`               // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
-	VmStatus            string     `json:"vm_status"`             // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
-	AccumulatorRootHash string     `json:"accumulator_root_hash"` // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
-	Changes             []Change   `json:"changes"`               // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
+	Events              []Event  `json:"events"`                // GenesisTransaction|UserTransaction|BlockMetadataTransaction
+	Version             uint64   `json:"version"`               // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
+	StateRootHash       string   `json:"state_root_hash"`       // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
+	EventRootHash       string   `json:"event_root_hash"`       // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
+	GasUsed             uint64   `json:"gas_used"`              // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
+	Success             bool     `json:"success"`               // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
+	VmStatus            string   `json:"vm_status"`             // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
+	AccumulatorRootHash string   `json:"accumulator_root_hash"` // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
+	Changes             []Change `json:"changes"`               // GenesisTransaction|UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
 
 	Timestamp uint64 `json:"timestamp"` // UserTransaction|BlockMetadataTransaction|StateCheckoutpointTransaction
 
@@ -166,8 +160,8 @@ type MoveFunction struct {
 type (
 	Change struct {
 		Type         string `json:"type"`           // delete_module|delete_resource|delete_table_item|write_module|write_resource|write_table_item
-		StateKeyHash string `json:"state_key_hash"` // delete_module|delete_resource
-		Address      string `json:"address"`        // delete_module|delete_resource
+		StateKeyHash string `json:"state_key_hash"` // delete_module|delete_resource|delete_table_item|write_module
+		Address      string `json:"address"`        // delete_module|delete_resource|write_module
 		Resource     string `json:"resource"`       // delete_resource
 		Module       string `json:"module"`         // delete_module
 
@@ -224,6 +218,6 @@ type AccountCoreDataMarshaling struct {
 }
 
 type AccountResource struct {
-	Type string      `json:"type"` // match ^0x[0-9a-zA-Z:_<>]+$
-	Data interface{} `json:"data"`
+	Type string                 `json:"type"` // match ^0x[0-9a-zA-Z:_<>]+$
+	Data map[string]interface{} `json:"data"`
 }
