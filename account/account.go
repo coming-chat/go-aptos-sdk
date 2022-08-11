@@ -51,3 +51,18 @@ func GenerateMultisignerAuthKey(publicKeys [][]byte, threshold int) ([32]byte, e
 
 	return authKey, nil
 }
+
+func (a *Account) Sign(data []byte, salt string) []byte {
+	return Sign(a.PrivateKey, data, salt)
+}
+
+func Sign(privateKey ed25519.PrivateKey, data []byte, salt string) []byte {
+	prefixBytes := []byte{}
+	if len(salt) > 0 {
+		s := sha3.Sum256([]byte(salt))
+		prefixBytes = s[:]
+	}
+
+	signingMessage := append(prefixBytes, data...)
+	return ed25519.Sign(privateKey, signingMessage)
+}
