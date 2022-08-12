@@ -1,8 +1,12 @@
 package aptosclient
 
 import (
+	"bytes"
+	"encoding/hex"
+	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/coming-chat/go-aptos/aptostypes"
 )
@@ -46,5 +50,45 @@ func (c *RestClient) GetTransaction(txHashOrVersion string) (res *aptostypes.Tra
 	}
 	res = &aptostypes.Transaction{}
 	err = doReq(req, res)
+	return
+}
+
+func (c *RestClient) SubmitTransaction(transaction *aptostypes.Transaction) (res *aptostypes.Transaction, err error) {
+	data, err := json.Marshal(transaction)
+	if err != nil {
+		return
+	}
+	req, err := http.NewRequest("POST", c.rpcUrl+"/transactions", bytes.NewReader(data))
+	if err != nil {
+		return
+	}
+
+	res = &aptostypes.Transaction{}
+	err = doReq(req, res)
+	return
+}
+
+func (c *RestClient) CreateTransactionSigningMessage(transaction *aptostypes.Transaction) (message []byte, err error) {
+	data, err := json.Marshal(transaction)
+	if err != nil {
+		return
+	}
+	req, err := http.NewRequest("POST", c.rpcUrl+"/transactions/signing_message", bytes.NewReader(data))
+	if err != nil {
+		return
+	}
+
+	res := &struct {
+		MessageHex string `json:"message"`
+	}{}
+	err = doReq(req, res)
+	if err != nil {
+		return
+	}
+	msgHex := res.MessageHex
+	if strings.HasPrefix(msgHex, "0x") {
+		msgHex = msgHex[2:]
+	}
+	message, err = hex.DecodeString(msgHex)
 	return
 }

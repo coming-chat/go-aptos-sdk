@@ -1,4 +1,4 @@
-package aptosaccount
+package aptosAccount
 
 import (
 	"crypto/ed25519"
