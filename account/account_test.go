@@ -91,3 +91,27 @@ func TestTransfer(t *testing.T) {
 
 	t.Log(newTx)
 }
+
+func TestAccountBalance(t *testing.T) {
+	address := "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
+
+	client, err := aptosclient.Dial(context.Background(), "https://fullnode.devnet.aptoslabs.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	balance, err := client.BalanceOf(address)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(balance)
+}
+
+func TestFaucet(t *testing.T) {
+	address := "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
+	hashs, err := aptosclient.FaucetFundAccount(address, 20, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(hashs)
+}

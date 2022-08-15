@@ -1,6 +1,7 @@
 package aptosclient
 
 import (
+	"math/big"
 	"net/http"
 	"strconv"
 
@@ -67,5 +68,20 @@ func (c *RestClient) GetAccountModule(address, moduleName string, version uint64
 	}
 	res = &aptostypes.MoveModule{}
 	err = doReq(req, res)
+	return
+}
+
+func (c *RestClient) BalanceOf(address string) (balance *big.Int, err error) {
+	t := "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
+	res, err := c.GetAccountResource(address, t, 0)
+	if err != nil {
+		return nil, err
+	}
+	coin := res.Data["coin"].(map[string]interface{})
+	value := coin["value"].(string)
+	balance, ok := big.NewInt(0).SetString(value, 10)
+	if !ok {
+		return big.NewInt(0), nil
+	}
 	return
 }
