@@ -50,9 +50,11 @@ func TestTransfer(t *testing.T) {
 	}
 
 	payload := &aptostypes.Payload{
-		Type:          "script_function_payload",
-		Function:      "0x1::coin::transfer",
-		TypeArguments: []string{"0x1::aptos_coin::AptosCoin"},
+		Type: "script_function_payload",
+		// Function:      "0x1::coin::transfer",
+		// TypeArguments: []string{"0x1::aptos_coin::AptosCoin"},
+		Function:      "0x1::account::transfer",
+		TypeArguments: []string{},
 		Arguments: []interface{}{
 			toAddress, amount,
 		},
@@ -89,7 +91,7 @@ func TestTransfer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Log(newTx)
+	println("tx hash = ", newTx.Hash)
 }
 
 func TestAccountBalance(t *testing.T) {
