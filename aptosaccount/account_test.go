@@ -3,15 +3,16 @@ package aptosaccount
 import (
 	"context"
 	"encoding/hex"
-	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/coming-chat/go-aptos/aptosclient"
 	"github.com/coming-chat/go-aptos/aptostypes"
 )
 
+const mnemonic = "dragon setup knee couch team journey genre barely nurse twelve blame toe"
+
 func TestAccountSign(t *testing.T) {
-	mnemonic := os.Getenv("WalletSdkTestM1")
 	account, err := NewAccountWithMnemonic(mnemonic)
 	if err != nil {
 		t.Fatal(err)
@@ -25,7 +26,6 @@ func TestAccountSign(t *testing.T) {
 }
 
 func TestTransfer(t *testing.T) {
-	mnemonic := "dragon setup knee couch team journey genre barely nurse twelve blame toe"
 	account, err := NewAccountWithMnemonic(mnemonic)
 	if err != nil {
 		t.Fatal(err)
@@ -85,6 +85,16 @@ func TestTransfer(t *testing.T) {
 		Signature: signatureHex,
 	}
 	t.Logf("signature = %x", signatureData)
+
+	out, _ := exec.Command("whoami").Output()
+	user := string(out)
+	switch user {
+	case "gg":
+		break
+	default:
+		t.Log("Non-specified machines, stop sending transactions after signing: ", user)
+		return
+	}
 
 	newTx, err := client.SubmitTransaction(transaction)
 	if err != nil {
