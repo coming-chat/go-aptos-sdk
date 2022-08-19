@@ -53,6 +53,9 @@ func (c *RestClient) GetTransaction(txHashOrVersion string) (res *aptostypes.Tra
 	return
 }
 
+// func (c *RestClient) SimulateTransaction(transaction *aptostypes.Transaction) (res *aptostypes.Transaction, err error) {
+// }
+
 func (c *RestClient) SubmitTransaction(transaction *aptostypes.Transaction) (res *aptostypes.Transaction, err error) {
 	data, err := json.Marshal(transaction)
 	if err != nil {
@@ -62,6 +65,7 @@ func (c *RestClient) SubmitTransaction(transaction *aptostypes.Transaction) (res
 	if err != nil {
 		return
 	}
+	req.Header["Content-Type"] = []string{"application/json"}
 
 	res = &aptostypes.Transaction{}
 	err = doReq(req, res)
@@ -73,19 +77,17 @@ func (c *RestClient) CreateTransactionSigningMessage(transaction *aptostypes.Tra
 	if err != nil {
 		return
 	}
-	req, err := http.NewRequest("POST", c.rpcUrl+"/transactions/signing_message", bytes.NewReader(data))
+	req, err := http.NewRequest("POST", c.rpcUrl+"/transactions/encode_submission", bytes.NewReader(data))
 	if err != nil {
 		return
 	}
+	req.Header["Content-Type"] = []string{"application/json"}
 
-	res := &struct {
-		MessageHex string `json:"message"`
-	}{}
-	err = doReq(req, res)
+	var msgHex string
+	err = doReq(req, &msgHex)
 	if err != nil {
 		return
 	}
-	msgHex := res.MessageHex
 	if strings.HasPrefix(msgHex, "0x") {
 		msgHex = msgHex[2:]
 	}

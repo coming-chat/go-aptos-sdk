@@ -1,10 +1,10 @@
 package aptostypes
 
 const (
-	ScriptFunctionPayload = "script_function_payload"
-	ScriptPayload         = "script_payload"
-	ModuleBundlePayload   = "module_bundle_payload"
-	WriteSetPayload       = "write_set_payload"
+	EntryFunctionPayload = "entry_function_payload"
+	ScriptPayload        = "script_payload"
+	ModuleBundlePayload  = "module_bundle_payload"
+	WriteSetPayload      = "write_set_payload"
 )
 
 //go:generate go run github.com/fjl/gencodec -type RestError -field-override restErrorMarshaling -out gen_rest_error_json.go

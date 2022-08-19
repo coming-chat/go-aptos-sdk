@@ -12,6 +12,9 @@ import (
 
 const mnemonic = "dragon setup knee couch team journey genre barely nurse twelve blame toe"
 
+// const RestUrl = "https://aptosdev.coming.chat/v1"
+const RestUrl = "https://fullnode.devnet.aptoslabs.com/v1"
+
 func TestAccountSign(t *testing.T) {
 	account, err := NewAccountWithMnemonic(mnemonic)
 	if err != nil {
@@ -35,7 +38,7 @@ func TestTransfer(t *testing.T) {
 	toAddress := "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
 	amount := "100"
 
-	client, err := aptosclient.Dial(context.Background(), "https://fullnode.devnet.aptoslabs.com")
+	client, err := aptosclient.Dial(context.Background(), RestUrl)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +53,7 @@ func TestTransfer(t *testing.T) {
 	}
 
 	payload := &aptostypes.Payload{
-		Type: "script_function_payload",
+		Type: "entry_function_payload",
 		// Function:      "0x1::coin::transfer",
 		// TypeArguments: []string{"0x1::aptos_coin::AptosCoin"},
 		Function:      "0x1::account::transfer",
@@ -107,7 +110,7 @@ func TestTransfer(t *testing.T) {
 func TestAccountBalance(t *testing.T) {
 	address := "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
 
-	client, err := aptosclient.Dial(context.Background(), "https://fullnode.devnet.aptoslabs.com")
+	client, err := aptosclient.Dial(context.Background(), RestUrl)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,7 +124,7 @@ func TestAccountBalance(t *testing.T) {
 
 func TestFaucet(t *testing.T) {
 	address := "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
-	hashs, err := aptosclient.FaucetFundAccount(address, 20, "")
+	hashs, err := aptosclient.FaucetFundAccount(address, 20000, "")
 	if err != nil {
 		t.Fatal(err)
 	}

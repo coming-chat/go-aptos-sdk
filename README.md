@@ -57,7 +57,7 @@ ledgerInfo, err := client.LedgerInfo()
 
 // Build paylod
 payload := &aptostypes.Payload{
-	Type: 				 "script_function_payload",
+	Type: 		   "entry_function_payload",
 	Function:      "0x1::coin::transfer",
 	TypeArguments: []string{"0x1::aptos_coin::AptosCoin"},
 	Arguments: []interface{}{
