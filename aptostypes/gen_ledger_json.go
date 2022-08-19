@@ -15,6 +15,7 @@ func (l LedgerInfo) MarshalJSON() ([]byte, error) {
 		ChainId         int        `json:"chain_id"`
 		LedgerVersion   jsonUint64 `json:"ledger_version" gencodec:"required"`
 		LedgerTimestamp jsonUint64 `json:"ledger_timestamp" gencodec:"required"`
+		BlockHeight 	jsonUint64 `json:"block_height" gencodec:"required"`
 		Epoch           jsonUint64 `json:"epoch"`
 		NodeRole        string     `json:"node_role"`
 	}
@@ -22,6 +23,7 @@ func (l LedgerInfo) MarshalJSON() ([]byte, error) {
 	enc.ChainId = l.ChainId
 	enc.LedgerVersion = jsonUint64(l.LedgerVersion)
 	enc.LedgerTimestamp = jsonUint64(l.LedgerTimestamp)
+	enc.BlockHeight = jsonUint64(l.BlockHeight)
 	enc.Epoch = jsonUint64(l.Epoch)
 	enc.NodeRole = l.NodeRole
 	return json.Marshal(&enc)
@@ -33,6 +35,7 @@ func (l *LedgerInfo) UnmarshalJSON(input []byte) error {
 		ChainId         *int        `json:"chain_id"`
 		LedgerVersion   *jsonUint64 `json:"ledger_version" gencodec:"required"`
 		LedgerTimestamp *jsonUint64 `json:"ledger_timestamp" gencodec:"required"`
+		BlockHeight 	*jsonUint64 `json:"block_height" gencodec:"required"`
 		Epoch           *jsonUint64 `json:"epoch"`
 		NodeRole        *string     `json:"node_role"`
 	}
@@ -51,6 +54,10 @@ func (l *LedgerInfo) UnmarshalJSON(input []byte) error {
 		return errors.New("missing required field 'ledger_timestamp' for LedgerInfo")
 	}
 	l.LedgerTimestamp = uint64(*dec.LedgerTimestamp)
+	if dec.BlockHeight == nil {
+		return errors.New("missing required field 'block_height' for LedgerInfo")
+	}
+	l.BlockHeight = uint64(*dec.BlockHeight)
 	if dec.Epoch != nil {
 		l.Epoch = uint64(*dec.Epoch)
 	}

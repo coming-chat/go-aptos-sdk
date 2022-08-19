@@ -30,6 +30,7 @@ type LedgerInfo struct {
 	ChainId         int    `json:"chain_id"`
 	LedgerVersion   uint64 `json:"ledger_version" gencodec:"required"`
 	LedgerTimestamp uint64 `json:"ledger_timestamp" gencodec:"required"`
+	BlockHeight     uint64 `json:"block_height" gencodec:"required"`
 
 	Epoch    uint64 `json:"epoch"`
 	NodeRole string `json:"node_role"`
@@ -39,6 +40,7 @@ type ledgerInfoMarshaling struct {
 	Epoch           jsonUint64
 	LedgerVersion   jsonUint64
 	LedgerTimestamp jsonUint64
+	BlockHeight     jsonUint64
 }
 
 //go:generate go run github.com/fjl/gencodec -type Transaction -field-override transactionMarshaling -out gen_transaction_json.go
