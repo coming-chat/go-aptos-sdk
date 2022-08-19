@@ -49,7 +49,7 @@ func main() {
 	}
 
 	txHash := "0xe1163f7b33df37995c9724b179b4d4a0fdff9eb2ef0c38a8d6e2982ce1c1de22"
-	tx, err := client.GetTransaction(txHash)
+	tx, err := client.GetTransactionByHash(txHash)
 	if err != nil {
 		printError(err)
 	}
@@ -61,14 +61,14 @@ func main() {
 		fmt.Printf("type: %s, hash: %s, version: %d\n", userTx.Type, userTx.Hash, userTx.Version)
 	}
 
-	tx, err = client.GetTransaction(strconv.FormatUint(tx.Version, 10))
+	tx, err = client.GetTransactionByVersion(strconv.FormatUint(tx.Version, 10))
 	if err != nil {
 		printError(err)
 	}
 	printLine("get tx by version")
 	fmt.Printf("type: %s, hash: %s, version: %d\n", tx.Type, tx.Hash, tx.Version)
 
-	tx, err = client.GetTransaction(strconv.FormatUint(6618578, 10))
+	tx, err = client.GetTransactionByVersion(strconv.FormatUint(6618578, 10))
 	if err != nil {
 		printError(err)
 	}

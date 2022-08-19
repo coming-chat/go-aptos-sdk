@@ -43,8 +43,18 @@ func (c *RestClient) GetAccountTransactions(account string, start, limit uint64)
 	return
 }
 
-func (c *RestClient) GetTransaction(txHashOrVersion string) (res *aptostypes.Transaction, err error) {
-	req, err := http.NewRequest("GET", c.rpcUrl+"/transactions/"+txHashOrVersion, nil)
+func (c *RestClient) GetTransactionByHash(txHash string) (res *aptostypes.Transaction, err error) {
+	req, err := http.NewRequest("GET", c.rpcUrl+"/transactions/by_hash/"+txHash, nil)
+	if err != nil {
+		return
+	}
+	res = &aptostypes.Transaction{}
+	err = doReq(req, res)
+	return
+}
+
+func (c *RestClient) GetTransactionByVersion(txVersion string) (res *aptostypes.Transaction, err error) {
+	req, err := http.NewRequest("GET", c.rpcUrl+"/transactions/by_version/"+txVersion, nil)
 	if err != nil {
 		return
 	}
