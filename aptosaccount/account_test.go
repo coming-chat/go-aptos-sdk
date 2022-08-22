@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/coming-chat/go-aptos/aptosclient"
@@ -13,7 +14,7 @@ import (
 const mnemonic = "dragon setup knee couch team journey genre barely nurse twelve blame toe"
 
 // const RestUrl = "https://aptosdev.coming.chat/v1"
-const RestUrl = "https://fullnode.devnet.aptoslabs.com/v1"
+const RestUrl = "https://fullnode.devnet.aptoslabs.com"
 
 func TestAccountSign(t *testing.T) {
 	account, err := NewAccountWithMnemonic(mnemonic)
@@ -90,7 +91,7 @@ func TestTransfer(t *testing.T) {
 	t.Logf("signature = %x", signatureData)
 
 	out, _ := exec.Command("whoami").Output()
-	user := string(out)
+	user := strings.TrimSpace(string(out))
 	switch user {
 	case "gg":
 		break

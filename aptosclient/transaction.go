@@ -2,6 +2,7 @@ package aptosclient
 
 import (
 	"bytes"
+	"crypto/ed25519"
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
@@ -63,8 +64,35 @@ func (c *RestClient) GetTransactionByVersion(txVersion string) (res *aptostypes.
 	return
 }
 
-// func (c *RestClient) SimulateTransaction(transaction *aptostypes.Transaction) (res *aptostypes.Transaction, err error) {
-// }
+func (c *RestClient) SimulateTransaction(transaction *aptostypes.Transaction, senderPublicKey string) (res []*aptostypes.Transaction, err error) {
+	signingMessage, err := c.CreateTransactionSigningMessage(transaction)
+	if err != nil {
+		return
+	}
+	zero := [32]byte{}
+	privateKey := ed25519.NewKeyFromSeed(zero[:])
+	signatureData := ed25519.Sign(privateKey, signingMessage)
+	signatureHex := "0x" + hex.EncodeToString(signatureData)
+	transaction.Signature = &aptostypes.Signature{
+		Type:      "ed25519_signature",
+		PublicKey: senderPublicKey,
+		Signature: signatureHex,
+	}
+
+	data, err := json.Marshal(transaction)
+	if err != nil {
+		return
+	}
+	req, err := http.NewRequest("POST", c.GetVersionedRpcUrl()+"/transactions/simulate", bytes.NewReader(data))
+	if err != nil {
+		return
+	}
+	req.Header["Content-Type"] = []string{"application/json"}
+
+	res = []*aptostypes.Transaction{}
+	err = doReq(req, &res)
+	return res, err
+}
 
 func (c *RestClient) SubmitTransaction(transaction *aptostypes.Transaction) (res *aptostypes.Transaction, err error) {
 	data, err := json.Marshal(transaction)
