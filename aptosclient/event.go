@@ -8,7 +8,7 @@ import (
 )
 
 func (c *RestClient) GetEventsByKey(eventKey string) (res []aptostypes.Event, err error) {
-	req, err := http.NewRequest("GET", c.rpcUrl+"/events/"+eventKey, nil)
+	req, err := http.NewRequest("GET", c.GetVersionedRpcUrl()+"/events/"+eventKey, nil)
 	if err != nil {
 		return
 	}
@@ -17,7 +17,7 @@ func (c *RestClient) GetEventsByKey(eventKey string) (res []aptostypes.Event, er
 }
 
 func (c *RestClient) GetEventsByEventHandle(address, eventHandle, field string, start, limit uint64) (res []aptostypes.Event, err error) {
-	req, err := http.NewRequest("GET", c.rpcUrl+"/accounts/"+address+"/events/"+eventHandle+"/"+field, nil)
+	req, err := http.NewRequest("GET", c.GetVersionedRpcUrl()+"/accounts/"+address+"/events/"+eventHandle+"/"+field, nil)
 	if err != nil {
 		return
 	}

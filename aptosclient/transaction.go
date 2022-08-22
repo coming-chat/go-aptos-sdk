@@ -12,7 +12,7 @@ import (
 )
 
 func (c *RestClient) GetTransactions(start, limit uint64) (res []aptostypes.Transaction, err error) {
-	req, err := http.NewRequest("GET", c.rpcUrl+"/transactions", nil)
+	req, err := http.NewRequest("GET", c.GetVersionedRpcUrl()+"/transactions", nil)
 	if err != nil {
 		return
 	}
@@ -27,7 +27,7 @@ func (c *RestClient) GetTransactions(start, limit uint64) (res []aptostypes.Tran
 }
 
 func (c *RestClient) GetAccountTransactions(account string, start, limit uint64) (res []aptostypes.Transaction, err error) {
-	req, err := http.NewRequest("GET", c.rpcUrl+"/accounts/"+account+"/transactions", nil)
+	req, err := http.NewRequest("GET", c.GetVersionedRpcUrl()+"/accounts/"+account+"/transactions", nil)
 	if err != nil {
 		return
 	}
@@ -44,7 +44,7 @@ func (c *RestClient) GetAccountTransactions(account string, start, limit uint64)
 }
 
 func (c *RestClient) GetTransactionByHash(txHash string) (res *aptostypes.Transaction, err error) {
-	req, err := http.NewRequest("GET", c.rpcUrl+"/transactions/by_hash/"+txHash, nil)
+	req, err := http.NewRequest("GET", c.GetVersionedRpcUrl()+"/transactions/by_hash/"+txHash, nil)
 	if err != nil {
 		return
 	}
@@ -54,7 +54,7 @@ func (c *RestClient) GetTransactionByHash(txHash string) (res *aptostypes.Transa
 }
 
 func (c *RestClient) GetTransactionByVersion(txVersion string) (res *aptostypes.Transaction, err error) {
-	req, err := http.NewRequest("GET", c.rpcUrl+"/transactions/by_version/"+txVersion, nil)
+	req, err := http.NewRequest("GET", c.GetVersionedRpcUrl()+"/transactions/by_version/"+txVersion, nil)
 	if err != nil {
 		return
 	}
@@ -71,7 +71,7 @@ func (c *RestClient) SubmitTransaction(transaction *aptostypes.Transaction) (res
 	if err != nil {
 		return
 	}
-	req, err := http.NewRequest("POST", c.rpcUrl+"/transactions", bytes.NewReader(data))
+	req, err := http.NewRequest("POST", c.GetVersionedRpcUrl()+"/transactions", bytes.NewReader(data))
 	if err != nil {
 		return
 	}
@@ -87,7 +87,7 @@ func (c *RestClient) CreateTransactionSigningMessage(transaction *aptostypes.Tra
 	if err != nil {
 		return
 	}
-	req, err := http.NewRequest("POST", c.rpcUrl+"/transactions/encode_submission", bytes.NewReader(data))
+	req, err := http.NewRequest("POST", c.GetVersionedRpcUrl()+"/transactions/encode_submission", bytes.NewReader(data))
 	if err != nil {
 		return
 	}

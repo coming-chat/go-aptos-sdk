@@ -11,17 +11,21 @@ import (
 	"github.com/coming-chat/go-aptos/aptostypes"
 )
 
-const VERSION = "v1"
+const (
+	VERSIONNONE = ""
+	VERSION1    = "v1"
+)
 
 type RestClient struct {
 	chainId int
 	c       *http.Client
 	rpcUrl  string
+	version string
 }
 
 func Dial(ctx context.Context, rpcUrl string) (client *RestClient, err error) {
 	client = &RestClient{
-		rpcUrl: strings.TrimRight(rpcUrl, "/") + "/" + VERSION,
+		rpcUrl: strings.TrimRight(rpcUrl, "/"),
 		c: &http.Client{
 			Transport: &http.Transport{
 				MaxIdleConns:    3,
@@ -29,6 +33,7 @@ func Dial(ctx context.Context, rpcUrl string) (client *RestClient, err error) {
 			},
 			Timeout: 30 * time.Second,
 		},
+		version: VERSION1,
 	}
 	err = client.setChainId()
 	return
@@ -36,15 +41,28 @@ func Dial(ctx context.Context, rpcUrl string) (client *RestClient, err error) {
 
 func DialWithClient(ctx context.Context, rpcUrl string, c *http.Client) (client *RestClient, err error) {
 	client = &RestClient{
-		rpcUrl: strings.TrimRight(rpcUrl, "/") + "/" + VERSION,
-		c:      c,
+		rpcUrl:  strings.TrimRight(rpcUrl, "/"),
+		c:       c,
+		version: VERSION1,
 	}
 	err = client.setChainId()
 	return
 }
 
+func (c *RestClient) SetVersion(version string) {
+	c.version = version
+}
+
+func (c *RestClient) GetVersion() string {
+	return c.version
+}
+
+func (c *RestClient) GetVersionedRpcUrl() string {
+	return c.rpcUrl + "/" + c.version
+}
+
 func (c *RestClient) LedgerInfo() (res *aptostypes.LedgerInfo, err error) {
-	req, err := http.NewRequest("GET", c.rpcUrl, nil)
+	req, err := http.NewRequest("GET", c.GetVersionedRpcUrl(), nil)
 	if err != nil {
 		return
 	}

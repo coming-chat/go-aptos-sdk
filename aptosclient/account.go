@@ -9,7 +9,7 @@ import (
 )
 
 func (c *RestClient) GetAccount(address string) (res *aptostypes.AccountCoreData, err error) {
-	req, err := http.NewRequest("GET", c.rpcUrl+"/accounts/"+address, nil)
+	req, err := http.NewRequest("GET", c.GetVersionedRpcUrl()+"/accounts/"+address, nil)
 	if err != nil {
 		return
 	}
@@ -19,7 +19,7 @@ func (c *RestClient) GetAccount(address string) (res *aptostypes.AccountCoreData
 }
 
 func (c *RestClient) GetAccountResources(address string) (res []aptostypes.AccountResource, err error) {
-	req, err := http.NewRequest("GET", c.rpcUrl+"/accounts/"+address+"/resources", nil)
+	req, err := http.NewRequest("GET", c.GetVersionedRpcUrl()+"/accounts/"+address+"/resources", nil)
 	if err != nil {
 		return
 	}
@@ -28,7 +28,7 @@ func (c *RestClient) GetAccountResources(address string) (res []aptostypes.Accou
 }
 
 func (c *RestClient) GetAccountResource(address string, resourceType string, version uint64) (res *aptostypes.AccountResource, err error) {
-	req, err := http.NewRequest("GET", c.rpcUrl+"/accounts/"+address+"/resource/"+resourceType, nil)
+	req, err := http.NewRequest("GET", c.GetVersionedRpcUrl()+"/accounts/"+address+"/resource/"+resourceType, nil)
 	if err != nil {
 		return
 	}
@@ -43,7 +43,7 @@ func (c *RestClient) GetAccountResource(address string, resourceType string, ver
 }
 
 func (c *RestClient) GetAccountModules(address string, version uint64) (res []aptostypes.MoveModule, err error) {
-	req, err := http.NewRequest("GET", c.rpcUrl+"/accounts/"+address+"/modules", nil)
+	req, err := http.NewRequest("GET", c.GetVersionedRpcUrl()+"/accounts/"+address+"/modules", nil)
 	if err != nil {
 		return
 	}
@@ -57,7 +57,7 @@ func (c *RestClient) GetAccountModules(address string, version uint64) (res []ap
 }
 
 func (c *RestClient) GetAccountModule(address, moduleName string, version uint64) (res *aptostypes.MoveModule, err error) {
-	req, err := http.NewRequest("GET", c.rpcUrl+"/accounts/"+address+"/module/"+moduleName, nil)
+	req, err := http.NewRequest("GET", c.GetVersionedRpcUrl()+"/accounts/"+address+"/module/"+moduleName, nil)
 	if err != nil {
 		return
 	}
