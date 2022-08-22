@@ -6,7 +6,7 @@ import (
 )
 
 // const RestUrl = "https://aptosdev.coming.chat/v1"
-const RestUrl = "https://fullnode.devnet.aptoslabs.com/v1"
+const RestUrl = "https://fullnode.devnet.aptoslabs.com/"
 
 func TestLedgerInfo(t *testing.T) {
 	client, err := Dial(context.Background(), RestUrl)

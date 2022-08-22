@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/coming-chat/go-aptos/aptostypes"
 )
+
+const VERSION = "v1"
 
 type RestClient struct {
 	chainId int
@@ -18,7 +21,7 @@ type RestClient struct {
 
 func Dial(ctx context.Context, rpcUrl string) (client *RestClient, err error) {
 	client = &RestClient{
-		rpcUrl: rpcUrl,
+		rpcUrl: strings.TrimRight(rpcUrl, "/") + "/" + VERSION,
 		c: &http.Client{
 			Transport: &http.Transport{
 				MaxIdleConns:    3,
@@ -33,7 +36,7 @@ func Dial(ctx context.Context, rpcUrl string) (client *RestClient, err error) {
 
 func DialWithClient(ctx context.Context, rpcUrl string, c *http.Client) (client *RestClient, err error) {
 	client = &RestClient{
-		rpcUrl: rpcUrl,
+		rpcUrl: strings.TrimRight(rpcUrl, "/") + "/" + VERSION,
 		c:      c,
 	}
 	err = client.setChainId()
