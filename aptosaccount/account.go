@@ -4,6 +4,7 @@ import (
 	"crypto/ed25519"
 	"errors"
 
+	"github.com/tyler-smith/go-bip32"
 	"github.com/tyler-smith/go-bip39"
 	"golang.org/x/crypto/sha3"
 )
@@ -31,7 +32,30 @@ func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewAccount(seed[:32]), nil
+
+	key, err := bip32.NewMasterKey(seed)
+	if err != nil {
+		return nil, err
+	}
+
+	// path "m/44'/637'/0'/0/0"
+	path := []uint32{0x8000002c, 0x8000027d, 0x80000000, 0, 0}
+	for _, n := range path {
+		key, err = key.NewChildKey(n)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return NewAccount(key.Key), nil
+}
+
+func GetOldVersionPrivateKeyWithMnemonic(mnemonic string) ([]byte, error) {
+	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
+	if err != nil {
+		return nil, err
+	}
+	return seed[:32], nil
 }
 
 func GenerateMultisignerAuthKey(publicKeys [][]byte, threshold int) ([32]byte, error) {
