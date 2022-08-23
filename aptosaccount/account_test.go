@@ -1,6 +1,7 @@
 package aptosaccount
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"os/exec"
@@ -9,6 +10,9 @@ import (
 
 	"github.com/coming-chat/go-aptos/aptosclient"
 	"github.com/coming-chat/go-aptos/aptostypes"
+	transactionbuilder "github.com/coming-chat/go-aptos/transaction_builder"
+	"github.com/the729/lcs"
+	"golang.org/x/crypto/sha3"
 )
 
 const mnemonic = "crack coil okay hotel glue embark all employ east impact stomach cigar"
@@ -84,8 +88,47 @@ func TestTransfer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("signingMessage = %x", signingMessage)
 
+	moduleName, err := transactionbuilder.NewModuleIdFromString("0x1::account")
+	if err != nil {
+		t.Fatal(err)
+	}
+	toAddr, err := transactionbuilder.NewAccountAddressFromHex(toAddress)
+	if err != nil {
+		t.Fatal(err)
+	}
+	toAmountBytes, _ := lcs.Marshal(uint64(100))
+	p2 := transactionbuilder.TransactionPayloadEntryFunction{
+		ModuleName:   *moduleName,
+		FunctionName: "transfer",
+		TyArgs:       []transactionbuilder.TypeTag{},
+		Args: [][]byte{
+			toAddr[:], toAmountBytes,
+		},
+	}
+	fromAddr, err := transactionbuilder.NewAccountAddressFromHex(fromAddress)
+	tx2 := transactionbuilder.RawTransaction{
+		Sender:                  *fromAddr,
+		SequenceNumber:          accountData.SequenceNumber,
+		Payload:                 p2,
+		MaxGasAmount:            2000,
+		GasUnitPrice:            1,
+		ExpirationTimestampSecs: ledgerInfo.LedgerTimestamp + 600,
+		ChainId:                 uint8(ledgerInfo.ChainId),
+	}
+
+	msg2, err := lcs.Marshal(tx2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	prefixBytes := sha3.Sum256([]byte("APTOS::RawTransaction"))
+	msg2 = append(prefixBytes[:], msg2...)
+
+	t.Logf("s1 = %x", signingMessage)
+	t.Logf("s2 = %x", msg2)
+	t.Log("Compare(s1, s2) = ", bytes.Compare(signingMessage, msg2))
+
+	return
 	// const RAW_TRANSACTION_SALT = "APTOS::RawTransaction"
 	signatureData := account.Sign(signingMessage, "")
 	publicKey := "0x" + hex.EncodeToString(account.PublicKey)
