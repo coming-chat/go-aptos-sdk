@@ -22,12 +22,8 @@ func (c *RestClient) GetEventsByEventHandle(address, eventHandle, field string, 
 		return
 	}
 	q := req.URL.Query()
-	if start > 0 {
-		q.Add("start", strconv.FormatUint(start, 10))
-	}
-	if limit > 0 {
-		q.Add("limit", strconv.FormatUint(limit, 10))
-	}
+	q.Add("start", strconv.FormatUint(start, 10))
+	q.Add("limit", strconv.FormatUint(limit, 10))
 	req.URL.RawQuery = q.Encode()
 	err = doReq(req, &res)
 	return
