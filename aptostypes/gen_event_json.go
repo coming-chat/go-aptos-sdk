@@ -15,12 +15,14 @@ func (e Event) MarshalJSON() ([]byte, error) {
 		SequenceNumber jsonUint64  `json:"sequence_number"`
 		Type           string      `json:"type"`
 		Data           interface{} `json:"data"`
+		Version        jsonUint64  `json:"version"`
 	}
 	var enc Event
 	enc.Key = e.Key
 	enc.SequenceNumber = jsonUint64(e.SequenceNumber)
 	enc.Type = e.Type
 	enc.Data = e.Data
+	enc.Version = jsonUint64(e.Version)
 	return json.Marshal(&enc)
 }
 
@@ -31,6 +33,7 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 		SequenceNumber *jsonUint64 `json:"sequence_number"`
 		Type           *string     `json:"type"`
 		Data           interface{} `json:"data"`
+		Version        *jsonUint64 `json:"version"`
 	}
 	var dec Event
 	if err := json.Unmarshal(input, &dec); err != nil {
@@ -47,6 +50,9 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 	}
 	if dec.Data != nil {
 		e.Data = dec.Data
+	}
+	if dec.Version != nil {
+		e.Version = uint64(*dec.Version)
 	}
 	return nil
 }

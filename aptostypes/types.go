@@ -187,10 +187,12 @@ type Event struct {
 	SequenceNumber uint64      `json:"sequence_number"`
 	Type           string      `json:"type"` // eg. 0x1::aptos_coin::AptosCoin, match ^(bool|u8|u64|u128|address|signer|vector<.+>|0x[0-9a-zA-Z:_<, >]+)$
 	Data           interface{} `json:"data"`
+	Version        uint64      `json:"version"` // only getEvents will return version
 }
 
 type eventMarshaling struct {
 	SequenceNumber jsonUint64
+	Version        jsonUint64
 }
 
 type Signature struct {
