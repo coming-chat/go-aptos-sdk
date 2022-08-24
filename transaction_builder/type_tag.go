@@ -7,6 +7,21 @@ import (
 	"github.com/the729/lcs"
 )
 
+func init() {
+	lcs.RegisterEnum(
+		(*TypeTag)(nil),
+
+		TypeTagBool{},
+		TypeTagU8{},
+		TypeTagU64{},
+		TypeTagU128{},
+		TypeTagAddress{},
+		TypeTagSigner{},
+		TypeTagVector{},
+		TypeTagStruct{},
+	)
+}
+
 type TypeTag interface{}
 
 type TypeTagBool struct{}
@@ -43,19 +58,4 @@ func NewTypeTagStructFromString(tag string) (*TypeTagStruct, error) {
 		ModuleName: Identifier(parts[1]),
 		Name:       Identifier(parts[2]),
 	}, nil
-}
-
-func registerTypeTag() {
-	lcs.RegisterEnum(
-		(*TypeTag)(nil),
-
-		TypeTagBool{},
-		TypeTagU8{},
-		TypeTagU64{},
-		TypeTagU128{},
-		TypeTagAddress{},
-		TypeTagSigner{},
-		TypeTagVector{},
-		TypeTagStruct{},
-	)
 }

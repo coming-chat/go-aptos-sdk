@@ -8,6 +8,28 @@ import (
 	"github.com/the729/lcs"
 )
 
+func init() {
+	lcs.RegisterEnum(
+		(*TransactionPayload)(nil),
+
+		TransactionPayloadScript{},
+		TransactionPayloadModuleBundle{},
+		TransactionPayloadEntryFunction{},
+	)
+
+	lcs.RegisterEnum(
+		(*TransactionArgument)(nil),
+
+		TransactionArgumentU8{},
+		TransactionArgumentU64{},
+		TransactionArgumentU128{},
+		TransactionArgumentAddress{},
+		TransactionArgumentAddress{},
+		TransactionArgumentU8Vector{},
+		TransactionArgumentBool{},
+	)
+}
+
 type RawTransaction struct {
 	Sender                  AccountAddress     `lcs:"sender"`
 	SequenceNumber          uint64             `lcs:"sequence_number"`
@@ -111,25 +133,3 @@ func (u *TransactionArgumentU128) SetBigValue(value *big.Int) error {
 // type SignedTransaction struct {
 // 	RawTransaction
 // }
-
-func registerTransaction() {
-	lcs.RegisterEnum(
-		(*TransactionPayload)(nil),
-
-		TransactionPayloadScript{},
-		TransactionPayloadModuleBundle{},
-		TransactionPayloadEntryFunction{},
-	)
-
-	lcs.RegisterEnum(
-		(*TransactionArgument)(nil),
-
-		TransactionArgumentU8{},
-		TransactionArgumentU64{},
-		TransactionArgumentU128{},
-		TransactionArgumentAddress{},
-		TransactionArgumentAddress{},
-		TransactionArgumentU8Vector{},
-		TransactionArgumentBool{},
-	)
-}

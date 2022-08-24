@@ -12,7 +12,6 @@ func TestTransactionArgumentSerilize(t *testing.T) {
 	u128 := TransactionArgumentU128{}
 	u128.SetBigValue(big.NewInt(1311768467750121216))
 
-	registerTransaction()
 	tests := []struct {
 		name    string
 		val     TransactionArgument

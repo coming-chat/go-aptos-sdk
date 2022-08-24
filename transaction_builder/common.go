@@ -6,11 +6,6 @@ import (
 	"strings"
 )
 
-func init() {
-	registerTypeTag()
-	registerTransaction()
-}
-
 const AddressLength = 32
 
 type AccountAddress [AddressLength]byte
