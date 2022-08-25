@@ -1,10 +1,12 @@
 package transactionbuilder
 
 import (
+	"crypto/ed25519"
 	"errors"
 	"math/big"
 	"strings"
 
+	"github.com/coming-chat/go-aptos/aptosaccount"
 	"github.com/the729/lcs"
 )
 
@@ -130,6 +132,23 @@ func (u *TransactionArgumentU128) SetBigValue(value *big.Int) error {
 	return nil
 }
 
-// type SignedTransaction struct {
-// 	RawTransaction
-// }
+type SignedTransaction struct {
+	Transaction   *RawTransaction          `lcs:"transaction"`
+	Authenticator TransactionAuthenticator `lcs:"authenticator"`
+}
+
+func GenerateBCSTransaction(from *aptosaccount.Account, txn *RawTransaction) ([]byte, error) {
+	builder := NewTransactionBuilderEd25519(func(sm SigningMessage) []byte {
+		return from.Sign(sm, "")
+	}, from.PublicKey)
+	return builder.Sign(txn)
+}
+
+func GenerateBCSSimulation(from *aptosaccount.Account, txn *RawTransaction) ([]byte, error) {
+	builder := NewTransactionBuilderEd25519(func(sm SigningMessage) []byte {
+		zero := [32]byte{}
+		privateKey := ed25519.NewKeyFromSeed(zero[:])
+		return ed25519.Sign(privateKey, sm)
+	}, from.PublicKey)
+	return builder.Sign(txn)
+}

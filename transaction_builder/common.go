@@ -2,13 +2,15 @@ package transactionbuilder
 
 import (
 	"encoding/hex"
-	"errors"
+	"fmt"
 	"strings"
 )
 
-const AddressLength = 32
+const (
+	ADDRESS_LENGTH = 32
+)
 
-type AccountAddress [AddressLength]byte
+type AccountAddress [ADDRESS_LENGTH]byte
 
 type Identifier string
 
@@ -29,11 +31,11 @@ func NewAccountAddressFromHex(addr string) (*AccountAddress, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(bytes) > AddressLength {
-		return nil, errors.New("Hex string is too long. Address's length is 32 bytes.")
+	if len(bytes) > ADDRESS_LENGTH {
+		return nil, fmt.Errorf("Hex string is too long. Address's length is %v bytes.", ADDRESS_LENGTH)
 	}
 
 	res := AccountAddress{}
-	copy(res[AddressLength-len(bytes):], bytes[:])
+	copy(res[ADDRESS_LENGTH-len(bytes):], bytes[:])
 	return &res, nil
 }

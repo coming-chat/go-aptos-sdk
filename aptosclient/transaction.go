@@ -64,6 +64,23 @@ func (c *RestClient) GetTransactionByVersion(txVersion string) (res *aptostypes.
 	return
 }
 
+/**
+ * Submits a signed transaction to the the endpoint that takes BCS payload
+ * @param signedTxn A BCS transaction representation
+ * @returns Transaction that is accepted and submitted to mempool
+ */
+func (c *RestClient) SimulateSignedBCSTransaction(signedTxn []byte) (res []*aptostypes.Transaction, err error) {
+	req, err := http.NewRequest("POST", c.GetVersionedRpcUrl()+"/transactions/simulate", bytes.NewReader(signedTxn))
+	if err != nil {
+		return
+	}
+	req.Header["Content-Type"] = []string{"application/x.aptos.signed_transaction+bcs"}
+
+	res = []*aptostypes.Transaction{}
+	err = doReq(req, &res)
+	return
+}
+
 func (c *RestClient) SimulateTransaction(transaction *aptostypes.Transaction, senderPublicKey string) (res []*aptostypes.Transaction, err error) {
 	signingMessage, err := c.CreateTransactionSigningMessage(transaction)
 	if err != nil {
@@ -92,6 +109,23 @@ func (c *RestClient) SimulateTransaction(transaction *aptostypes.Transaction, se
 	res = []*aptostypes.Transaction{}
 	err = doReq(req, &res)
 	return res, err
+}
+
+/**
+ * Submits a signed transaction to the the endpoint that takes BCS payload
+ * @param signedTxn A BCS transaction representation
+ * @returns Transaction that is accepted and submitted to mempool
+ */
+func (c *RestClient) SubmitSignedBCSTransaction(signedTxn []byte) (res *aptostypes.Transaction, err error) {
+	req, err := http.NewRequest("POST", c.GetVersionedRpcUrl()+"/transactions", bytes.NewReader(signedTxn))
+	if err != nil {
+		return
+	}
+	req.Header["Content-Type"] = []string{"application/x.aptos.signed_transaction+bcs"}
+
+	res = &aptostypes.Transaction{}
+	err = doReq(req, res)
+	return
 }
 
 func (c *RestClient) SubmitTransaction(transaction *aptostypes.Transaction) (res *aptostypes.Transaction, err error) {
