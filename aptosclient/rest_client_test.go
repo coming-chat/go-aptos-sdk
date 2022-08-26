@@ -2,6 +2,7 @@ package aptosclient
 
 import (
 	"context"
+	"strconv"
 	"testing"
 )
 
@@ -26,17 +27,21 @@ func TestTransactionDetail(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	version := "16603388"
+	version := "500000"
 	tx1, err := client.GetTransactionByVersion(version)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Logf("tx.hash = %v", tx1.Hash)
 
-	hash := "0x7e2eabcf1dfd252599f8ae1369a945c9fda947bdffb6e35d37873beed2463ddb"
+	hash := tx1.Hash
 	tx2, err := client.GetTransactionByHash(hash)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Logf("tx.version = %v", tx2.Version)
+
+	if strconv.FormatUint(tx2.Version, 10) != version {
+		t.Fatal("Transaction's version and hash not match.")
+	}
 }

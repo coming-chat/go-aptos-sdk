@@ -15,13 +15,16 @@ import (
 	"github.com/the729/lcs"
 )
 
-const mnemonic = "crack coil okay hotel glue embark all employ east impact stomach cigar"
+const (
+	Mnemonic        = "crack coil okay hotel glue embark all employ east impact stomach cigar"
+	ReceiverAddress = "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
+)
 
 func TestTransferBCS(t *testing.T) {
-	toAddress := "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
+	toAddress := ReceiverAddress
 	amount := uint64(100)
 
-	account, err := aptosaccount.NewAccountWithMnemonic(mnemonic)
+	account, err := aptosaccount.NewAccountWithMnemonic(Mnemonic)
 	checkError(t, err)
 
 	client, err := Dial(context.Background(), RestUrl)
@@ -50,10 +53,10 @@ func TestTransferBCS(t *testing.T) {
 }
 
 func TestTransferJson(t *testing.T) {
-	toAddress := "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
+	toAddress := ReceiverAddress
 	amount := uint64(100)
 
-	account, err := aptosaccount.NewAccountWithMnemonic(mnemonic)
+	account, err := aptosaccount.NewAccountWithMnemonic(Mnemonic)
 	checkError(t, err)
 
 	client, err := Dial(context.Background(), RestUrl)
@@ -91,10 +94,10 @@ func TestTransferJson(t *testing.T) {
 }
 
 func TestBCSEncoder(t *testing.T) {
-	toAddress := "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
+	toAddress := ReceiverAddress
 	amount := uint64(100)
 
-	account, err := aptosaccount.NewAccountWithMnemonic(mnemonic)
+	account, err := aptosaccount.NewAccountWithMnemonic(Mnemonic)
 	checkError(t, err)
 
 	client, err := Dial(context.Background(), RestUrl)
@@ -133,10 +136,10 @@ func TestBCSEncoder(t *testing.T) {
 }
 
 func TestEstimateTransactionFeeBcs(t *testing.T) {
-	toAddress := "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
+	toAddress := ReceiverAddress
 	amount := uint64(100)
 
-	account, err := aptosaccount.NewAccountWithMnemonic(mnemonic)
+	account, err := aptosaccount.NewAccountWithMnemonic(Mnemonic)
 	checkError(t, err)
 
 	client, err := Dial(context.Background(), RestUrl)
@@ -166,21 +169,21 @@ func TestEstimateTransactionFeeBcs(t *testing.T) {
 	t.Logf("gas price = %v, gas used = %v", firstTxn.GasUnitPrice, firstTxn.GasUsed)
 }
 
+func TestFaucet(t *testing.T) {
+	address := ReceiverAddress
+	hashs, err := FaucetFundAccount(address, 1000, "")
+	checkError(t, err)
+	t.Log(hashs)
+}
+
 func TestAccountBalance(t *testing.T) {
-	address := "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
+	address := ReceiverAddress
 
 	client, err := Dial(context.Background(), RestUrl)
 	checkError(t, err)
 	balance, err := client.BalanceOf(address)
 	checkError(t, err)
 	t.Log(balance)
-}
-
-func TestFaucet(t *testing.T) {
-	address := "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
-	hashs, err := FaucetFundAccount(address, 20000, "")
-	checkError(t, err)
-	t.Log(hashs)
 }
 
 func checkError(t *testing.T, err error) {
@@ -195,7 +198,11 @@ func generateTransactionBcs(
 	from *aptosaccount.Account,
 	to string, amount uint64) (txn *txBuilder.RawTransaction, err error) {
 
-	moduleName, err := txBuilder.NewModuleIdFromString("0x1::account")
+	moduleName, err := txBuilder.NewModuleIdFromString("0x1::coin")
+	if err != nil {
+		return
+	}
+	token, err := txBuilder.NewTypeTagStructFromString("0x1::aptos_coin::AptosCoin")
 	if err != nil {
 		return
 	}
@@ -207,7 +214,7 @@ func generateTransactionBcs(
 	payload := txBuilder.TransactionPayloadEntryFunction{
 		ModuleName:   *moduleName,
 		FunctionName: "transfer",
-		TyArgs:       []txBuilder.TypeTag{},
+		TyArgs:       []txBuilder.TypeTag{*token},
 		Args: [][]byte{
 			toAddr[:], toAmountBytes,
 		},
@@ -232,11 +239,11 @@ func generateTransactionJson(
 
 	amountString := strconv.FormatUint(amount, 10)
 	payload := &aptostypes.Payload{
-		Type: aptostypes.EntryFunctionPayload,
-		// Function:      "0x1::coin::transfer",
-		// TypeArguments: []string{"0x1::aptos_coin::AptosCoin"},
-		Function:      "0x1::account::transfer",
-		TypeArguments: []string{},
+		Type:          aptostypes.EntryFunctionPayload,
+		Function:      "0x1::coin::transfer",
+		TypeArguments: []string{"0x1::aptos_coin::AptosCoin"},
+		// Function:      "0x1::account::transfer",
+		// TypeArguments: []string{},
 		Arguments: []interface{}{
 			to, amountString,
 		},
