@@ -12,12 +12,14 @@ var _ = (*ledgerInfoMarshaling)(nil)
 // MarshalJSON marshals as JSON.
 func (l LedgerInfo) MarshalJSON() ([]byte, error) {
 	type LedgerInfo struct {
-		ChainId         int        `json:"chain_id"`
-		LedgerVersion   jsonUint64 `json:"ledger_version" gencodec:"required"`
-		LedgerTimestamp jsonUint64 `json:"ledger_timestamp" gencodec:"required"`
-		BlockHeight 	jsonUint64 `json:"block_height" gencodec:"required"`
-		Epoch           jsonUint64 `json:"epoch"`
-		NodeRole        string     `json:"node_role"`
+		ChainId             int        `json:"chain_id"`
+		LedgerVersion       jsonUint64 `json:"ledger_version" gencodec:"required"`
+		LedgerTimestamp     jsonUint64 `json:"ledger_timestamp" gencodec:"required"`
+		BlockHeight         jsonUint64 `json:"block_height" gencodec:"required"`
+		Epoch               jsonUint64 `json:"epoch"`
+		NodeRole            string     `json:"node_role"`
+		OldestBlockHeight   jsonUint64 `json:"oldest_block_height"`
+		OldestLedgerVersion jsonUint64 `json:"oldest_ledger_version"`
 	}
 	var enc LedgerInfo
 	enc.ChainId = l.ChainId
@@ -26,18 +28,22 @@ func (l LedgerInfo) MarshalJSON() ([]byte, error) {
 	enc.BlockHeight = jsonUint64(l.BlockHeight)
 	enc.Epoch = jsonUint64(l.Epoch)
 	enc.NodeRole = l.NodeRole
+	enc.OldestBlockHeight = jsonUint64(l.OldestBlockHeight)
+	enc.OldestLedgerVersion = jsonUint64(l.OldestLedgerVersion)
 	return json.Marshal(&enc)
 }
 
 // UnmarshalJSON unmarshals from JSON.
 func (l *LedgerInfo) UnmarshalJSON(input []byte) error {
 	type LedgerInfo struct {
-		ChainId         *int        `json:"chain_id"`
-		LedgerVersion   *jsonUint64 `json:"ledger_version" gencodec:"required"`
-		LedgerTimestamp *jsonUint64 `json:"ledger_timestamp" gencodec:"required"`
-		BlockHeight 	*jsonUint64 `json:"block_height" gencodec:"required"`
-		Epoch           *jsonUint64 `json:"epoch"`
-		NodeRole        *string     `json:"node_role"`
+		ChainId             *int        `json:"chain_id"`
+		LedgerVersion       *jsonUint64 `json:"ledger_version" gencodec:"required"`
+		LedgerTimestamp     *jsonUint64 `json:"ledger_timestamp" gencodec:"required"`
+		BlockHeight         *jsonUint64 `json:"block_height" gencodec:"required"`
+		Epoch               *jsonUint64 `json:"epoch"`
+		NodeRole            *string     `json:"node_role"`
+		OldestBlockHeight   *jsonUint64 `json:"oldest_block_height"`
+		OldestLedgerVersion *jsonUint64 `json:"oldest_ledger_version"`
 	}
 	var dec LedgerInfo
 	if err := json.Unmarshal(input, &dec); err != nil {
@@ -63,6 +69,12 @@ func (l *LedgerInfo) UnmarshalJSON(input []byte) error {
 	}
 	if dec.NodeRole != nil {
 		l.NodeRole = *dec.NodeRole
+	}
+	if dec.OldestBlockHeight != nil {
+		l.OldestBlockHeight = uint64(*dec.OldestBlockHeight)
+	}
+	if dec.OldestLedgerVersion != nil {
+		l.OldestLedgerVersion = uint64(*dec.OldestLedgerVersion)
 	}
 	return nil
 }
