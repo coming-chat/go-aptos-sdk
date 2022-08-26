@@ -27,20 +27,41 @@ type restErrorMarshaling struct {
 
 // LedgerInfo represents chain current ledger info
 type LedgerInfo struct {
-	ChainId         int    `json:"chain_id"`
-	LedgerVersion   uint64 `json:"ledger_version" gencodec:"required"`
-	LedgerTimestamp uint64 `json:"ledger_timestamp" gencodec:"required"`
-	BlockHeight     uint64 `json:"block_height" gencodec:"required"`
-
-	Epoch    uint64 `json:"epoch"`
-	NodeRole string `json:"node_role"`
+	ChainId             int    `json:"chain_id"`
+	LedgerVersion       uint64 `json:"ledger_version" gencodec:"required"`
+	LedgerTimestamp     uint64 `json:"ledger_timestamp" gencodec:"required"`
+	BlockHeight         uint64 `json:"block_height" gencodec:"required"`
+	Epoch               uint64 `json:"epoch"`
+	NodeRole            string `json:"node_role"`
+	OldestBlockHeight   uint64 `json:"oldest_block_height"`
+	OldestLedgerVersion uint64 `json:"oldest_ledger_version"`
 }
 
 type ledgerInfoMarshaling struct {
-	Epoch           jsonUint64
-	LedgerVersion   jsonUint64
-	LedgerTimestamp jsonUint64
-	BlockHeight     jsonUint64
+	Epoch               jsonUint64
+	LedgerVersion       jsonUint64
+	LedgerTimestamp     jsonUint64
+	BlockHeight         jsonUint64
+	OldestBlockHeight   jsonUint64
+	OldestLedgerVersion jsonUint64
+}
+
+//go:generate go run github.com/fjl/gencodec -type Block -field-override blockMarshaling -out gen_block_json.go
+
+type Block struct {
+	BlockHeight    uint64        `json:"block_height"`
+	BlockHash      string        `json:"block_hash"`
+	BlockTimestamp uint64        `json:"block_timestamp"`
+	FirstVersion   uint64        `json:"first_version"`
+	LastVersion    uint64        `json:"last_version"`
+	Transactions   []Transaction `json:"transactions"`
+}
+
+type blockMarshaling struct {
+	BlockHeight    jsonUint64
+	BlockTimestamp jsonUint64
+	FirstVersion   jsonUint64
+	LastVersion    jsonUint64
 }
 
 //go:generate go run github.com/fjl/gencodec -type Transaction -field-override transactionMarshaling -out gen_transaction_json.go
