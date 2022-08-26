@@ -4,6 +4,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strings"
+
+	"github.com/the729/lcs"
 )
 
 const (
@@ -38,4 +40,9 @@ func NewAccountAddressFromHex(addr string) (*AccountAddress, error) {
 	res := AccountAddress{}
 	copy(res[ADDRESS_LENGTH-len(bytes):], bytes[:])
 	return &res, nil
+}
+
+func BCSSerializeBasicValue[T bool | int8 | int16 | int32 | int64 | uint8 | uint16 | uint32 | uint64 | string](t T) []byte {
+	s, _ := lcs.Marshal(t)
+	return s
 }

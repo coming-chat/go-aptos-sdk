@@ -60,7 +60,7 @@ ledgerInfo, err := client.LedgerInfo()
 // Build paylod
 moduleName, err := txBuilder.NewModuleIdFromString("0x1::account")
 toAddr, err := txBuilder.NewAccountAddressFromHex(toAddress)
-toAmountBytes, _ := lcs.Marshal(amount)
+toAmountBytes := txBuilder.BCSSerializeBasicValue(amount)
 
 payload := txBuilder.TransactionPayloadEntryFunction{
 	ModuleName:   *moduleName,

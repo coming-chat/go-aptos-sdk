@@ -12,7 +12,6 @@ import (
 	"github.com/coming-chat/go-aptos/aptosaccount"
 	"github.com/coming-chat/go-aptos/aptostypes"
 	txBuilder "github.com/coming-chat/go-aptos/transaction_builder"
-	"github.com/the729/lcs"
 )
 
 const (
@@ -210,7 +209,7 @@ func generateTransactionBcs(
 	if err != nil {
 		return
 	}
-	toAmountBytes, _ := lcs.Marshal(amount)
+	toAmountBytes := txBuilder.BCSSerializeBasicValue(amount)
 	payload := txBuilder.TransactionPayloadEntryFunction{
 		ModuleName:   *moduleName,
 		FunctionName: "transfer",

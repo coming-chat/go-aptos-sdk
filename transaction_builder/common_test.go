@@ -1,7 +1,11 @@
 package transactionbuilder
 
 import (
+	"bytes"
+	"reflect"
 	"testing"
+
+	"github.com/the729/lcs"
 )
 
 func TestNewAccountAddressFromHex(t *testing.T) {
@@ -39,5 +43,30 @@ func TestNewAccountAddressFromHex(t *testing.T) {
 				t.Logf("result = %x", got)
 			}
 		})
+	}
+}
+
+func TestBCSSerializeBasicValue(t *testing.T) {
+	checker := func(bcs []byte, x interface{}) {
+		b, _ := lcs.Marshal(x)
+		if bytes.Compare(b, bcs) != 0 {
+			t.Errorf("BCSSerializeBasicValue failed %v", reflect.TypeOf(x).Name())
+		}
+	}
+	{
+		x := uint8(100)
+		checker(BCSSerializeBasicValue(x), x)
+	}
+	{
+		x := uint32(200)
+		checker(BCSSerializeBasicValue(x), x)
+	}
+	{
+		x := int64(300)
+		checker(BCSSerializeBasicValue(x), x)
+	}
+	{
+		x := "400abc"
+		checker(BCSSerializeBasicValue(x), x)
 	}
 }
