@@ -9,8 +9,6 @@ import (
 
 	"github.com/coming-chat/go-aptos/aptosclient"
 	"github.com/coming-chat/go-aptos/aptostypes"
-
-	_ "github.com/fjl/gencodec"
 )
 
 const rpcUrl = "https://fullnode.devnet.aptoslabs.com"
