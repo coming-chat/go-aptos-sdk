@@ -35,7 +35,7 @@ signedData := account.Sign(data, "")
 ```
 
 ### Transfer Aptos Coin (BCS)
-> NOTE: The implementation of bcs is based on the [lcs](https://github.com/the729/lcs) library
+> NOTE: The implementation of bcs is based on the [lcs](https://github.com/coming-chat/lcs) library
 
 ```go
 import "github.com/coming-chat/go-aptos/aptosaccount"

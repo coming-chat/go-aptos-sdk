@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/the729/lcs"
+	"github.com/coming-chat/lcs"
 )
 
 func init() {

@@ -3,7 +3,7 @@ package transactionbuilder
 import (
 	"errors"
 
-	"github.com/the729/lcs"
+	"github.com/coming-chat/lcs"
 	"golang.org/x/crypto/sha3"
 )
 

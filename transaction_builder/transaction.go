@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/coming-chat/go-aptos/aptosaccount"
-	"github.com/the729/lcs"
+	"github.com/coming-chat/lcs"
 )
 
 func init() {
@@ -94,7 +94,7 @@ type TransactionArgumentU64 struct {
 	Value uint64 `lcs:"value"`
 }
 type TransactionArgumentU128 struct {
-	Value [16]byte `lcs:"value"`
+	Value *big.Int
 }
 type TransactionArgumentAddress struct {
 	Value AccountAddress `lcs:"value"`
@@ -106,29 +106,36 @@ type TransactionArgumentBool struct {
 	Value bool `lcs:"value"`
 }
 
-func (u *TransactionArgumentU128) BigValue() *big.Int {
-	bytes := [16]byte{}
-	for i := 0; i < 16; i++ {
-		bytes[i] = u.Value[16-i-1]
+func (u TransactionArgumentU128) MarshalLCS(e *lcs.Encoder) error {
+	if u.Value == nil || u.Value.Sign() == -1 {
+		return errors.New("Invalid U128: invalid number.")
 	}
-	return big.NewInt(0).SetBytes(bytes[:])
-}
-func (u *TransactionArgumentU128) SetBigValue(value *big.Int) error {
-	if value.Sign() == -1 {
-		return errors.New("Invalid U128: negative number.")
-	}
-	bytes := value.Bytes()
+	bytes := u.Value.Bytes()
 	l := len(bytes)
 	if l > 16 {
 		return errors.New("Invalid U128: too large number.")
 	}
+	result := [16]byte{}
 	for i := 0; i < 16; i++ {
 		if i >= l {
-			u.Value[i] = 0
+			result[i] = 0
 		} else {
-			u.Value[i] = bytes[l-i-1]
+			result[i] = bytes[l-i-1]
 		}
 	}
+	return e.EncodeFixedBytes(result[:])
+}
+
+func (u *TransactionArgumentU128) UnmarshalLCS(d *lcs.Decoder) error {
+	bytes, err := d.DecodeFixedBytes(16)
+	if err != nil {
+		return err
+	}
+	// reverse bytes
+	for i, j := 0, len(bytes)-1; i < j; i, j = i+1, j-1 {
+		bytes[i], bytes[j] = bytes[j], bytes[i]
+	}
+	u.Value = big.NewInt(0).SetBytes(bytes)
 	return nil
 }
 

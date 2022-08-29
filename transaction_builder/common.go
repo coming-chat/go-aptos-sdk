@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/the729/lcs"
+	"github.com/coming-chat/lcs"
 )
 
 const (

@@ -1,6 +1,6 @@
 package transactionbuilder
 
-import "github.com/the729/lcs"
+import "github.com/coming-chat/lcs"
 
 func init() {
 	lcs.RegisterEnum(

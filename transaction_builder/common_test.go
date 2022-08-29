@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/the729/lcs"
+	"github.com/coming-chat/lcs"
 )
 
 func TestNewAccountAddressFromHex(t *testing.T) {

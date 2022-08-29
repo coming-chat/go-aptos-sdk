@@ -5,13 +5,10 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/the729/lcs"
+	"github.com/coming-chat/lcs"
 )
 
 func TestTransactionArgumentSerilize(t *testing.T) {
-	u128 := TransactionArgumentU128{}
-	u128.SetBigValue(big.NewInt(1311768467750121216))
-
 	tests := []struct {
 		name    string
 		val     TransactionArgument
@@ -25,7 +22,7 @@ func TestTransactionArgumentSerilize(t *testing.T) {
 		},
 		{
 			name: "U128",
-			val:  u128,
+			val:  TransactionArgumentU128{big.NewInt(1311768467750121216)},
 			want: []byte{0x00, 0xEF, 0xCD, 0xAB, 0x78, 0x56, 0x34, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 		},
 	}
@@ -43,7 +40,7 @@ func TestTransactionArgumentSerilize(t *testing.T) {
 	}
 }
 
-func TestTransactionArgumentU128_SetBigValue(t *testing.T) {
+func TestTransactionArgumentU128(t *testing.T) {
 	// max U128 ≈ 3.4E38 < 1E39
 	tests := []struct {
 		name    string
@@ -56,11 +53,11 @@ func TestTransactionArgumentU128_SetBigValue(t *testing.T) {
 		},
 		{
 			name: "normal big number",
-			val:  big.NewInt(0).Exp(big.NewInt(10), big.NewInt(30), nil),
+			val:  big.NewInt(0).Exp(big.NewInt(10), big.NewInt(30), nil), // 10 ^ 30
 		},
 		{
 			name: "max u128",
-			val:  big.NewInt(0).Sub(big.NewInt(0).Exp(big.NewInt(2), big.NewInt(128), nil), big.NewInt(1)),
+			val:  big.NewInt(0).Sub(big.NewInt(0).Exp(big.NewInt(2), big.NewInt(128), nil), big.NewInt(1)), // 2 ^ 128 - 1
 		},
 		{
 			name:    "negative number",
@@ -69,22 +66,27 @@ func TestTransactionArgumentU128_SetBigValue(t *testing.T) {
 		},
 		{
 			name:    "very big number",
-			val:     big.NewInt(0).Exp(big.NewInt(10), big.NewInt(40), nil),
+			val:     big.NewInt(0).Exp(big.NewInt(10), big.NewInt(40), nil), // 10 ^ 40
 			wantErr: true,
 		},
 	}
-	u := TransactionArgumentU128{} // Test multiple reads and writes
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := u.SetBigValue(tt.val)
+			u := TransactionArgumentU128{tt.val}
+			bytes, err := lcs.Marshal(u)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("TransactionArgumentU128.SetBigValue() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("TransactionArgumentU128 marshal error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if err == nil {
-				restoreInt := u.BigValue()
-				if tt.val.Cmp(restoreInt) != 0 {
-					t.Errorf("TransactionArgumentU128.BigValue() restore big int failed, %v -> %v", tt.val, restoreInt)
+				u2 := TransactionArgumentU128{}
+				err = lcs.Unmarshal(bytes, &u2)
+				if err != nil {
+					t.Errorf("TransactionArgumentU128 unmarshal error = %v", err)
+					return
+				}
+				if u.Value.Cmp(u2.Value) != 0 {
+					t.Errorf("TransactionArgumentU128 restore big int failed, %v -> %v", u.Value, u2.Value)
 				}
 			}
 		})
