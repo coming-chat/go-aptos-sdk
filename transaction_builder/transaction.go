@@ -111,18 +111,12 @@ func (u TransactionArgumentU128) MarshalLCS(e *lcs.Encoder) error {
 		return errors.New("Invalid U128: invalid number.")
 	}
 	bytes := u.Value.Bytes()
-	l := len(bytes)
-	if l > 16 {
+	if len(bytes) > 16 {
 		return errors.New("Invalid U128: too large number.")
 	}
+	ReverseBytes(bytes)
 	result := [16]byte{}
-	for i := 0; i < 16; i++ {
-		if i >= l {
-			result[i] = 0
-		} else {
-			result[i] = bytes[l-i-1]
-		}
-	}
+	copy(result[:], bytes)
 	return e.EncodeFixedBytes(result[:])
 }
 
@@ -131,10 +125,7 @@ func (u *TransactionArgumentU128) UnmarshalLCS(d *lcs.Decoder) error {
 	if err != nil {
 		return err
 	}
-	// reverse bytes
-	for i, j := 0, len(bytes)-1; i < j; i, j = i+1, j-1 {
-		bytes[i], bytes[j] = bytes[j], bytes[i]
-	}
+	ReverseBytes(bytes)
 	u.Value = big.NewInt(0).SetBytes(bytes)
 	return nil
 }
@@ -158,4 +149,10 @@ func GenerateBCSSimulation(from *aptosaccount.Account, txn *RawTransaction) ([]b
 		return ed25519.Sign(privateKey, sm)
 	}, from.PublicKey)
 	return builder.Sign(txn)
+}
+
+func ReverseBytes(b []byte) {
+	for i, j := 0, len(b)-1; i < j; i, j = i+1, j-1 {
+		b[i], b[j] = b[j], b[i]
+	}
 }
