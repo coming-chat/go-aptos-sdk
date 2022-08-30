@@ -7,15 +7,15 @@ func init() {
 		(*TransactionAuthenticator)(nil),
 
 		TransactionAuthenticatorEd25519{},
-		// TransactionAuthenticatorMultiEd25519{},
-		// TransactionAuthenticatorMultiAgent{},
+		TransactionAuthenticatorMultiEd25519{},
+		TransactionAuthenticatorMultiAgent{},
 	)
 
 	lcs.RegisterEnum(
 		(*AccountAuthenticator)(nil),
 
 		AccountAuthenticatorEd25519{},
-		// AccountAuthenticatorMultiEd25519{},
+		AccountAuthenticatorMultiEd25519{},
 	)
 }
 
@@ -28,8 +28,16 @@ type TransactionAuthenticatorEd25519 struct {
 	Signature Ed25519Signature `lcs:"signature"`
 }
 
-// type TransactionAuthenticatorMultiEd25519 struct{}
-// type TransactionAuthenticatorMultiAgent struct{}
+type TransactionAuthenticatorMultiEd25519 struct {
+	PublicKey MultiEd25519PublicKey `lcs:"publicKey"`
+	Signature MultiEd25519Signature `lcs:"signature"`
+}
+
+type TransactionAuthenticatorMultiAgent struct {
+	Sender                   AccountAuthenticator   `lcs:"sender"`
+	SecondarySignerAddresses []AccountAddress       `lcs:"secondary_signer_addresses"`
+	SecondarySigners         []AccountAuthenticator `lcs:"secondary_signers"`
+}
 
 // ------ AccountAuthenticator ------
 
@@ -40,4 +48,7 @@ type AccountAuthenticatorEd25519 struct {
 	Signature Ed25519Signature `lcs:"signature"`
 }
 
-// type AccountAuthenticatorMultiEd25519 struct{}
+type AccountAuthenticatorMultiEd25519 struct {
+	PublicKey MultiEd25519PublicKey `lcs:"publicKey"`
+	Signature MultiEd25519Signature `lcs:"signature"`
+}

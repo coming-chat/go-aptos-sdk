@@ -42,6 +42,14 @@ func NewAccountAddressFromHex(addr string) (*AccountAddress, error) {
 	return &res, nil
 }
 
+func (a AccountAddress) ToString() string {
+	return "0x" + hex.EncodeToString(a[:])
+}
+
+func (a AccountAddress) ToShortString() string {
+	return "0x" + strings.TrimLeft(hex.EncodeToString(a[:]), "0")
+}
+
 func BCSSerializeBasicValue[T bool | int8 | int16 | int32 | int64 | uint8 | uint16 | uint32 | uint64 | string](t T) []byte {
 	s, _ := lcs.Marshal(t)
 	return s

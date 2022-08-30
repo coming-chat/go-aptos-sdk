@@ -29,7 +29,11 @@ func TestMultiEd25519PublicKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Log(mp2.Threshold, mp.PublicKeys)
+	if !reflect.DeepEqual(mp, mp2) {
+		t.Fatal("MultiEd25519PublicKey Marshal & Unmarshal failed.")
+	}
+
+	t.Log(mp2.Threshold, mp2.PublicKeys)
 }
 
 func TestMultiEd25519Signature(t *testing.T) {
@@ -52,6 +56,10 @@ func TestMultiEd25519Signature(t *testing.T) {
 	err = lcs.Unmarshal(bytes, &ms2)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(ms, ms2) {
+		t.Fatal("MultiEd25519PublicKey Marshal & Unmarshal failed.")
 	}
 
 	t.Log(ms2.Bitmap, ms2.Signatures)

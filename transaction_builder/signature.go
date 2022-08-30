@@ -1,10 +1,12 @@
 package transactionbuilder
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 
 	"github.com/coming-chat/lcs"
+	"golang.org/x/crypto/sha3"
 )
 
 const (
@@ -75,6 +77,17 @@ func (mp *MultiEd25519PublicKey) UnmarshalLCS(d *lcs.Decoder) error {
 		mp.PublicKeys = append(mp.PublicKeys, Ed25519PublicKey{publicBytes})
 	}
 	return nil
+}
+
+func (mp *MultiEd25519PublicKey) AuthenticationKey() [32]byte {
+	bytes := append(mp.ToBytes(), 0x01)
+	authKey := sha3.Sum256(bytes)
+	return authKey
+}
+
+func (mp *MultiEd25519PublicKey) Address() string {
+	b := mp.AuthenticationKey()
+	return "0x" + hex.EncodeToString(b[:])
 }
 
 type MultiEd25519Signature struct {

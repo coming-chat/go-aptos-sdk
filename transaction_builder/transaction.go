@@ -30,6 +30,12 @@ func init() {
 		TransactionArgumentU8Vector{},
 		TransactionArgumentBool{},
 	)
+
+	lcs.RegisterEnum(
+		(*RawTransactionWithData)(nil),
+
+		MultiAgentRawTransaction{},
+	)
 }
 
 type RawTransaction struct {
@@ -128,6 +134,13 @@ func (u *TransactionArgumentU128) UnmarshalLCS(d *lcs.Decoder) error {
 	ReverseBytes(bytes)
 	u.Value = big.NewInt(0).SetBytes(bytes)
 	return nil
+}
+
+type RawTransactionWithData interface{}
+
+type MultiAgentRawTransaction struct {
+	RawTransaction           RawTransaction   `lcs:"raw_txn"`
+	SecondarySignerAddresses []AccountAddress `lcs:"secondary_signer_addresses"`
 }
 
 type SignedTransaction struct {
