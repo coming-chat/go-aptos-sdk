@@ -178,3 +178,87 @@ func NewTransactionBuilderABI(abis [][]byte, config *ABIBuilderConfig) (*Transac
 		BuildereConfig: bc,
 	}, nil
 }
+
+func (tb *TransactionBuilderABI) BuildTransactionPayload(function string, tyTags []string, args []any) (TransactionPayload, error) {
+
+	tb.BuildTransactionPayload("", []string{""}, []any{uint32(122), "213", ""})
+
+	scriptABI, ok := tb.ABIMap[function]
+	if !ok {
+		return nil, fmt.Errorf("Cannot find function: %v", function)
+	}
+
+	typeTags := []TypeTag{}
+	for _, tagString := range tyTags {
+		parser, err := NewTypeTagParser(tagString)
+		if err != nil {
+			return nil, err
+		}
+		tag, err := parser.ParseTypeTag()
+		if err != nil {
+			return nil, err
+		}
+		typeTags = append(typeTags, tag)
+	}
+
+	var payload TransactionPayload
+	if funcABI, ok := scriptABI.(EntryFunctionABI); ok {
+		bcsArgs, err := toBCSArgs(funcABI.Args, args)
+		if err != nil {
+			return nil, err
+		}
+		payload = TransactionPayloadEntryFunction{
+			ModuleName:   funcABI.ModuleName,
+			FunctionName: Identifier(funcABI.Name),
+			TyArgs:       typeTags,
+			Args:         bcsArgs,
+		}
+	} else if funcABI, ok := scriptABI.(TransactionScriptABI); ok {
+		payload = TransactionPayloadScript{
+			Code:   funcABI.Code,
+			TyArgs: typeTags,
+			Args:   []TransactionArgument{},
+		}
+	} else {
+		return nil, errors.New("Unsupported script abi.")
+	}
+
+	return payload, nil
+}
+
+func toBCSArgs(abiArgs []ArgumentABI, args []any) ([][]byte, error) {
+	if len(abiArgs) != len(args) {
+		return nil, errors.New("Wrong number of args provided.")
+	}
+
+	res := [][]byte{}
+	for i, arg := range args {
+		parsedArg, err := parseValidArg(arg, abiArgs[i])
+		if err != nil {
+			return nil, err
+		}
+		bytes, err := lcs.Marshal(parsedArg)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, bytes)
+	}
+
+	return res, nil
+}
+
+func toTransactionArguments(abiArgs []ArgumentABI, args []any) ([]TransactionArgument, error) {
+	if len(abiArgs) != len(args) {
+		return nil, errors.New("Wrong number of args provided.")
+	}
+
+	res := []TransactionArgument{}
+	for i, arg := range args {
+		argument, err := argToTransactionArgument(arg, abiArgs[i])
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, argument)
+	}
+	return res, nil
+}

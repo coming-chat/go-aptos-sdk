@@ -15,7 +15,7 @@ func init() {
 		(*TransactionPayload)(nil),
 
 		TransactionPayloadScript{},
-		TransactionPayloadModuleBundle{},
+		TransactionPayloadModuleBundle{}, // TODO: ModuleBundle will be removed.
 		TransactionPayloadEntryFunction{},
 	)
 
@@ -25,7 +25,6 @@ func init() {
 		TransactionArgumentU8{},
 		TransactionArgumentU64{},
 		TransactionArgumentU128{},
-		TransactionArgumentAddress{},
 		TransactionArgumentAddress{},
 		TransactionArgumentU8Vector{},
 		TransactionArgumentBool{},
@@ -63,9 +62,7 @@ type TransactionPayloadEntryFunction struct {
 	Args         [][]byte   `lcs:"args"`
 }
 
-type TransactionPayloadModuleBundle struct {
-	Codes []Module `lcs:"codes"`
-}
+type TransactionPayloadModuleBundle struct{}
 
 type Module struct {
 	Code []byte `lcs:"code"`

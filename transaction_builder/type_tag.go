@@ -2,6 +2,7 @@ package transactionbuilder
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/coming-chat/lcs"
@@ -58,4 +59,8 @@ func NewTypeTagStructFromString(tag string) (*TypeTagStruct, error) {
 		ModuleName: Identifier(parts[1]),
 		Name:       Identifier(parts[2]),
 	}, nil
+}
+
+func (t *TypeTagStruct) ShortFunctionName() string {
+	return fmt.Sprintf("%v::%v::%v", t.Address.ToShortString(), t.ModuleName, t.Name)
 }
