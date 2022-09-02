@@ -125,11 +125,11 @@ type ABIBuilderConfig struct {
 }
 
 type TransactionBuilderABI struct {
-	ABIMap         map[string]ScriptABI
-	BuildereConfig ABIBuilderConfig
+	ABIMap map[string]ScriptABI
+	// BuildereConfig ABIBuilderConfig
 }
 
-func NewTransactionBuilderABI(abis [][]byte, config *ABIBuilderConfig) (*TransactionBuilderABI, error) {
+func NewTransactionBuilderABI(abis [][]byte) (*TransactionBuilderABI, error) {
 	abiMap := make(map[string]ScriptABI)
 	for _, bytes := range abis {
 		var abi ScriptABI
@@ -153,36 +153,12 @@ func NewTransactionBuilderABI(abis [][]byte, config *ABIBuilderConfig) (*Transac
 		abiMap[k] = abi
 	}
 
-	bc := ABIBuilderConfig{
-		GasUnitPrice:  1,
-		MaxGasAmount:  2000,
-		ExpSecFromNow: 20,
-	}
-	if config != nil {
-		bc.Sender = config.Sender
-		bc.SequenceNumber = config.SequenceNumber
-		bc.ChainId = config.ChainId
-		if config.GasUnitPrice > 0 {
-			bc.GasUnitPrice = config.GasUnitPrice
-		}
-		if config.MaxGasAmount > 0 {
-			bc.MaxGasAmount = config.MaxGasAmount
-		}
-		if config.ExpSecFromNow > 0 {
-			bc.ExpSecFromNow = config.ExpSecFromNow
-		}
-	}
-
 	return &TransactionBuilderABI{
-		ABIMap:         abiMap,
-		BuildereConfig: bc,
+		ABIMap: abiMap,
 	}, nil
 }
 
 func (tb *TransactionBuilderABI) BuildTransactionPayload(function string, tyTags []string, args []any) (TransactionPayload, error) {
-
-	tb.BuildTransactionPayload("", []string{""}, []any{uint32(122), "213", ""})
-
 	scriptABI, ok := tb.ABIMap[function]
 	if !ok {
 		return nil, fmt.Errorf("Cannot find function: %v", function)
@@ -214,10 +190,14 @@ func (tb *TransactionBuilderABI) BuildTransactionPayload(function string, tyTags
 			Args:         bcsArgs,
 		}
 	} else if funcABI, ok := scriptABI.(TransactionScriptABI); ok {
+		scriptArgs, err := toTransactionArguments(funcABI.Args, args)
+		if err != nil {
+			return nil, err
+		}
 		payload = TransactionPayloadScript{
 			Code:   funcABI.Code,
 			TyArgs: typeTags,
-			Args:   []TransactionArgument{},
+			Args:   scriptArgs,
 		}
 	} else {
 		return nil, errors.New("Unsupported script abi.")
