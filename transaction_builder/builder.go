@@ -203,7 +203,7 @@ func (tb *TransactionBuilderABI) BuildTransactionPayload(function string, tyTags
 		return nil, errors.New("Unsupported script abi.")
 	}
 
-	return payload, nil
+	return TransactionPayload(payload), nil
 }
 
 func toBCSArgs(abiArgs []ArgumentABI, args []any) ([][]byte, error) {
@@ -213,7 +213,7 @@ func toBCSArgs(abiArgs []ArgumentABI, args []any) ([][]byte, error) {
 
 	res := [][]byte{}
 	for i, arg := range args {
-		parsedArg, err := parseValidArg(arg, abiArgs[i])
+		parsedArg, err := parseValidArg(arg, abiArgs[i].TypeTag)
 		if err != nil {
 			return nil, err
 		}
@@ -234,7 +234,7 @@ func toTransactionArguments(abiArgs []ArgumentABI, args []any) ([]TransactionArg
 
 	res := []TransactionArgument{}
 	for i, arg := range args {
-		argument, err := argToTransactionArgument(arg, abiArgs[i])
+		argument, err := argToTransactionArgument(arg, abiArgs[i].TypeTag)
 		if err != nil {
 			return nil, err
 		}
