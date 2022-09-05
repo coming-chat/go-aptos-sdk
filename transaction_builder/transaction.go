@@ -3,7 +3,6 @@ package transactionbuilder
 import (
 	"crypto/ed25519"
 	"errors"
-	"math/big"
 	"strings"
 
 	"github.com/coming-chat/go-aptos/aptosaccount"
@@ -97,7 +96,7 @@ type TransactionArgumentU64 struct {
 	Value uint64 `lcs:"value"`
 }
 type TransactionArgumentU128 struct {
-	Value *big.Int
+	Uint128
 }
 type TransactionArgumentAddress struct {
 	Value AccountAddress `lcs:"value"`
@@ -107,30 +106,6 @@ type TransactionArgumentU8Vector struct {
 }
 type TransactionArgumentBool struct {
 	Value bool `lcs:"value"`
-}
-
-func (u TransactionArgumentU128) MarshalLCS(e *lcs.Encoder) error {
-	if u.Value == nil || u.Value.Sign() == -1 {
-		return errors.New("Invalid U128: invalid number.")
-	}
-	bytes := u.Value.Bytes()
-	if len(bytes) > 16 {
-		return errors.New("Invalid U128: too large number.")
-	}
-	ReverseBytes(bytes)
-	result := [16]byte{}
-	copy(result[:], bytes)
-	return e.EncodeFixedBytes(result[:])
-}
-
-func (u *TransactionArgumentU128) UnmarshalLCS(d *lcs.Decoder) error {
-	bytes, err := d.DecodeFixedBytes(16)
-	if err != nil {
-		return err
-	}
-	ReverseBytes(bytes)
-	u.Value = big.NewInt(0).SetBytes(bytes)
-	return nil
 }
 
 type RawTransactionWithData interface{}
@@ -159,10 +134,4 @@ func GenerateBCSSimulation(from *aptosaccount.Account, txn *RawTransaction) ([]b
 		return ed25519.Sign(privateKey, sm)
 	}, from.PublicKey)
 	return builder.Sign(txn)
-}
-
-func ReverseBytes(b []byte) {
-	for i, j := 0, len(b)-1; i < j; i, j = i+1, j-1 {
-		b[i], b[j] = b[j], b[i]
-	}
 }

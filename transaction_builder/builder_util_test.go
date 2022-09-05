@@ -198,7 +198,7 @@ func Test_serializeArg(t *testing.T) {
 		},
 		{
 			name: "serialize u128",
-			args: args{TransactionArgumentU128{
+			args: args{Uint128{
 				big.NewInt(0).Sub(big.NewInt(0).Exp(big.NewInt(2), big.NewInt(128), nil), big.NewInt(1))}, TypeTagU128{}},
 			want: []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
 		},
@@ -330,13 +330,13 @@ func Test_argToTransactionArgument(t *testing.T) {
 		},
 		{
 			name: "convert u128",
-			args: args{TransactionArgumentU128{big.NewInt(123)}, TypeTagU128{}},
-			want: TransactionArgumentU128{big.NewInt(123)},
+			args: args{TransactionArgumentU128{Uint128{big.NewInt(123)}}, TypeTagU128{}},
+			want: TransactionArgumentU128{Uint128{big.NewInt(123)}},
 		},
 		{
 			name: "convert u128 big.int",
 			args: args{big.NewInt(98765), TypeTagU128{}},
-			want: TransactionArgumentU128{big.NewInt(98765)},
+			want: TransactionArgumentU128{Uint128{big.NewInt(98765)}},
 		},
 		{
 			name:    "error u128",

@@ -2,7 +2,9 @@ package transactionbuilder
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"math/big"
 	"strings"
 
 	"github.com/coming-chat/lcs"
@@ -53,4 +55,36 @@ func (a AccountAddress) ToShortString() string {
 func BCSSerializeBasicValue[T bool | int8 | int16 | int32 | int64 | uint8 | uint16 | uint32 | uint64 | string](t T) []byte {
 	s, _ := lcs.Marshal(t)
 	return s
+}
+
+type Uint128 struct{ *big.Int }
+
+func (u Uint128) MarshalLCS(e *lcs.Encoder) error {
+	if u.Sign() == -1 {
+		return errors.New("Invalid U128: invalid number.")
+	}
+	bytes := u.Bytes()
+	if len(bytes) > 16 {
+		return errors.New("Invalid U128: too large number.")
+	}
+	ReverseBytes(bytes)
+	result := [16]byte{}
+	copy(result[:], bytes)
+	return e.EncodeFixedBytes(result[:])
+}
+
+func (u *Uint128) UnmarshalLCS(d *lcs.Decoder) error {
+	bytes, err := d.DecodeFixedBytes(16)
+	if err != nil {
+		return err
+	}
+	ReverseBytes(bytes)
+	u.Int = big.NewInt(0).SetBytes(bytes)
+	return nil
+}
+
+func ReverseBytes(b []byte) {
+	for i, j := 0, len(b)-1; i < j; i, j = i+1, j-1 {
+		b[i], b[j] = b[j], b[i]
+	}
 }

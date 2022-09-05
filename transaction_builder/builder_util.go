@@ -230,11 +230,11 @@ func parseValidArg(argVal any, argType TypeTag) (any, error) {
 			return v, nil
 		}
 	case TypeTagU128:
-		if v, ok := argVal.(TransactionArgumentU128); ok {
+		if v, ok := argVal.(Uint128); ok {
 			return v, nil
 		}
 		if v, ok := argVal.(*big.Int); ok {
-			return TransactionArgumentU128{v}, nil
+			return Uint128{v}, nil
 		}
 	case TypeTagAddress:
 		if v, ok := argVal.(AccountAddress); ok {
@@ -304,8 +304,11 @@ func argToTransactionArgument(argVal any, argType TypeTag) (TransactionArgument,
 		if v, ok := argVal.(TransactionArgumentU128); ok {
 			return v, nil
 		}
-		if v, ok := argVal.(*big.Int); ok {
+		if v, ok := argVal.(Uint128); ok {
 			return TransactionArgumentU128{v}, nil
+		}
+		if v, ok := argVal.(*big.Int); ok {
+			return TransactionArgumentU128{Uint128{v}}, nil
 		}
 	case TypeTagAddress:
 		if v, ok := argVal.(AccountAddress); ok {

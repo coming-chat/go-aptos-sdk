@@ -22,7 +22,7 @@ func TestTransactionArgumentSerilize(t *testing.T) {
 		},
 		{
 			name: "U128",
-			val:  TransactionArgumentU128{big.NewInt(1311768467750121216)},
+			val:  TransactionArgumentU128{Uint128{big.NewInt(1311768467750121216)}},
 			want: []byte{0x00, 0xEF, 0xCD, 0xAB, 0x78, 0x56, 0x34, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 		},
 	}
@@ -72,7 +72,7 @@ func TestTransactionArgumentU128(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := TransactionArgumentU128{tt.val}
+			u := TransactionArgumentU128{Uint128{tt.val}}
 			bytes, err := lcs.Marshal(u)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("TransactionArgumentU128 marshal error = %v, wantErr %v", err, tt.wantErr)
@@ -85,8 +85,8 @@ func TestTransactionArgumentU128(t *testing.T) {
 					t.Errorf("TransactionArgumentU128 unmarshal error = %v", err)
 					return
 				}
-				if u.Value.Cmp(u2.Value) != 0 {
-					t.Errorf("TransactionArgumentU128 restore big int failed, %v -> %v", u.Value, u2.Value)
+				if u.Cmp(u2.Int) != 0 {
+					t.Errorf("TransactionArgumentU128 restore big int failed, %v -> %v", u, u2)
 				}
 			}
 		})
