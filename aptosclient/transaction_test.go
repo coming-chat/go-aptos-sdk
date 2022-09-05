@@ -154,7 +154,7 @@ func TestEstimateTransactionFeeBcs(t *testing.T) {
 	txn, err := generateTransactionBcs(accountData, ledgerInfo, account, toAddress, amount)
 	checkError(t, err)
 
-	signedTxn, err := txBuilder.GenerateBCSSimulation(account, txn)
+	signedTxn, err := txBuilder.GenerateBCSSimulation(account.PublicKey, txn)
 	checkError(t, err)
 
 	newTxns, err := client.SimulateSignedBCSTransaction(signedTxn)

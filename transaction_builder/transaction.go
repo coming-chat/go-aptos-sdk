@@ -127,11 +127,11 @@ func GenerateBCSTransaction(from *aptosaccount.Account, txn *RawTransaction) ([]
 	return builder.Sign(txn)
 }
 
-func GenerateBCSSimulation(from *aptosaccount.Account, txn *RawTransaction) ([]byte, error) {
+func GenerateBCSSimulation(from ed25519.PublicKey, txn *RawTransaction) ([]byte, error) {
 	builder := NewTransactionBuilderEd25519(func(sm SigningMessage) []byte {
 		zero := [32]byte{}
 		privateKey := ed25519.NewKeyFromSeed(zero[:])
 		return ed25519.Sign(privateKey, sm)
-	}, from.PublicKey)
+	}, from)
 	return builder.Sign(txn)
 }
