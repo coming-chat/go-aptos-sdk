@@ -4,7 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"reflect"
 	"strings"
+
+	"github.com/coming-chat/lcs"
 )
 
 type Token struct {
@@ -215,75 +218,78 @@ func (p *TypeTagParser) ParseTypeTag() (TypeTag, error) {
 	return nil, errInvalidTypeTag
 }
 
-func parseValidArg(argVal any, argType TypeTag) (any, error) {
+func serializeArg(argVal any, argType TypeTag, encoder *lcs.Encoder) error {
 	switch argType.(type) {
 	case TypeTagBool:
 		if v, ok := argVal.(bool); ok {
-			return v, nil
+			return encoder.Encode(v)
 		}
 	case TypeTagU8:
 		if v, ok := argVal.(uint8); ok {
-			return v, nil
+			return encoder.Encode(v)
 		}
 	case TypeTagU64:
 		if v, ok := argVal.(uint64); ok {
-			return v, nil
+			return encoder.Encode(v)
 		}
 	case TypeTagU128:
 		if v, ok := argVal.(Uint128); ok {
-			return v, nil
+			return encoder.Encode(v)
 		}
 		if v, ok := argVal.(*big.Int); ok {
-			return Uint128{v}, nil
+			return encoder.Encode(Uint128{v})
 		}
 	case TypeTagAddress:
 		if v, ok := argVal.(AccountAddress); ok {
-			return v, nil
+			return encoder.Encode(v)
 		}
 		if v, ok := argVal.(string); ok {
 			addr, err := NewAccountAddressFromHex(v)
-			if err == nil {
-				return *addr, nil
+			if err != nil {
+				return err
 			}
+			return encoder.Encode(addr)
 		}
 	case TypeTagVector:
 		itemType := argType.(TypeTagVector).Value
 		switch itemType.(type) {
 		case TypeTagU8:
 			if v, ok := argVal.([]byte); ok {
-				return v, nil
+				return encoder.Encode(v)
 			}
 			if v, ok := argVal.(string); ok {
-				return v, nil
+				return encoder.Encode(v)
 			}
 		}
 
-		arr, ok := argVal.([]any)
-		if !ok {
-			return nil, errors.New("Invalid vector args.")
+		rv := reflect.ValueOf(argVal)
+		kindstring := rv.Kind().String()
+		print(kindstring)
+		if rv.Kind() != reflect.Array && rv.Kind() != reflect.Slice {
+			return errors.New("Invalid vector args.")
 		}
-		res := []any{}
-		for _, a := range arr {
-			r, err := parseValidArg(a, itemType)
-			if err != nil {
-				return nil, err
+		length := rv.Len()
+		if err := encoder.EncodeUleb128(uint64(length)); err != nil {
+			return err
+		}
+		for i := 0; i < length; i++ {
+			if err := serializeArg(rv.Index(i).Interface(), itemType, encoder); err != nil {
+				return err
 			}
-			res = append(res, r)
 		}
-		return res, nil
+		return nil
 	case TypeTagStruct:
 		tag := argType.(TypeTagStruct)
 		if tag.ShortFunctionName() != "0x1::string::String" {
-			return nil, errors.New("The only supported struct arg is of type 0x1::string::String")
+			return errors.New("The only supported struct arg is of type 0x1::string::String")
 		}
 		if v, ok := argVal.(string); ok {
-			return v, nil
+			return encoder.Encode(v)
 		}
 	default:
-		return nil, errors.New("Unsupported arg type.")
+		return errors.New("Unsupported arg type.")
 	}
-
-	return nil, fmt.Errorf("Invalid argument %v.", argVal)
+	return fmt.Errorf("Invalid argument %v.", argVal)
 }
 
 func argToTransactionArgument(argVal any, argType TypeTag) (TransactionArgument, error) {

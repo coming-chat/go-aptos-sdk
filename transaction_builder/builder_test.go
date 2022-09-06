@@ -81,6 +81,70 @@ func TestTransactionBuilderABI(t *testing.T) {
 	assert.Equal(t, SigningMessage(signingMessageJson), signingMessageABI, "The signingMessage from abi must be the same")
 }
 
+func TestTransactionBuilderABIOpen(t *testing.T) {
+	account, err := aptosaccount.NewAccountWithMnemonic(Mnemonic)
+	assert.Nil(t, err)
+	client, err := aptosclient.Dial(context.Background(), RestUrl)
+	assert.Nil(t, err)
+
+	ledgerInfo, err := client.LedgerInfo()
+	assert.Nil(t, err)
+	fromAddress := "0x" + hex.EncodeToString(account.AuthKey[:])
+	accountData, err := client.GetAccount(fromAddress)
+	assert.Nil(t, err)
+
+	functionName := "0xb39c45e31d1429218aeb3590e2a046edae9303fbbc3ef6a065384569cfd81881::red_packet::open"
+
+	// build transaction with json
+	payloadJson := &aptostypes.Payload{
+		Type:          aptostypes.EntryFunctionPayload,
+		Function:      functionName,
+		TypeArguments: []string{},
+		Arguments: []interface{}{
+			"5", []string{AccountAddress{0x1}.ToShortString(), "0x22"}, []string{"100", "200"},
+		},
+	}
+	txnJson := &aptostypes.Transaction{
+		Sender:                  fromAddress,
+		SequenceNumber:          accountData.SequenceNumber,
+		MaxGasAmount:            2000,
+		GasUnitPrice:            1,
+		Payload:                 payloadJson,
+		ExpirationTimestampSecs: ledgerInfo.LedgerTimestamp + 600,
+	}
+
+	signingMessageJson, err := client.CreateTransactionSigningMessage(txnJson)
+	assert.Nil(t, err)
+	t.Logf("%x: signing message from json", signingMessageJson)
+
+	// build transaction with abi
+	redpacketABI := LoadRedPacketABI(t)
+	payloadABI, err := redpacketABI.BuildTransactionPayload(
+		functionName,
+		[]string{},
+		[]any{
+			uint64(5), []interface{}{AccountAddress{0x1}, "0x22"}, []uint64{100, 200},
+		},
+	)
+	assert.Nil(t, err)
+	txnABI := &RawTransaction{
+		Sender:                  account.AuthKey,
+		SequenceNumber:          accountData.SequenceNumber,
+		Payload:                 payloadABI,
+		MaxGasAmount:            2000,
+		GasUnitPrice:            1,
+		ExpirationTimestampSecs: ledgerInfo.LedgerTimestamp + 600,
+		ChainId:                 uint8(ledgerInfo.ChainId),
+	}
+
+	signingMessageABI, err := txnABI.GetSigningMessage()
+	assert.Nil(t, err)
+	t.Logf("%x: signing message from abi ", signingMessageABI)
+
+	// compare
+	assert.Equal(t, SigningMessage(signingMessageJson), signingMessageABI, "The signingMessage from abi must be the same")
+}
+
 func LoadRedPacketABI(t *testing.T) *TransactionBuilderABI {
 	abiHexStrings := []string{
 		// create

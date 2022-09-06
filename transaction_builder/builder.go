@@ -1,6 +1,7 @@
 package transactionbuilder
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 
@@ -213,15 +214,13 @@ func toBCSArgs(abiArgs []ArgumentABI, args []any) ([][]byte, error) {
 
 	res := [][]byte{}
 	for i, arg := range args {
-		parsedArg, err := parseValidArg(arg, abiArgs[i].TypeTag)
+		var b bytes.Buffer
+		encoder := lcs.NewEncoder(&b)
+		err := serializeArg(arg, abiArgs[i].TypeTag, encoder)
 		if err != nil {
 			return nil, err
 		}
-		bytes, err := lcs.Marshal(parsedArg)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, bytes)
+		res = append(res, b.Bytes())
 	}
 
 	return res, nil

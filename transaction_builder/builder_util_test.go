@@ -1,6 +1,7 @@
 package transactionbuilder
 
 import (
+	"bytes"
 	"math/big"
 	"reflect"
 	"testing"
@@ -263,18 +264,14 @@ func Test_serializeArg(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			arg, err := parseValidArg(tt.args.argVal, tt.args.argType)
-			if err != nil {
-				if !tt.wantErr {
-					t.Errorf("parseValidArg() error = %v, wantErr %v", err, tt.wantErr)
-				}
-				return
-			}
-			got, err := lcs.Marshal(arg)
+			var b bytes.Buffer
+			encoder := lcs.NewEncoder(&b)
+			err := serializeArg(tt.args.argVal, tt.args.argType, encoder)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("parseValidArg() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+			got := b.Bytes()
 			if (err == nil) && !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("parseValidArg() = %v, want %v", got, tt.want)
 			}
