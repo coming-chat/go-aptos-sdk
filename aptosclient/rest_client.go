@@ -101,6 +101,7 @@ func handleResponse(result interface{}, resp *http.Response) error {
 	if resp.StatusCode >= 400 {
 		restError := &aptostypes.RestError{}
 		json.Unmarshal(body, &restError)
+		restError.Code = resp.StatusCode
 		return restError
 	}
 	return json.Unmarshal(body, &result)

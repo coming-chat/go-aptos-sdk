@@ -71,10 +71,17 @@ func (c *RestClient) GetAccountModule(address, moduleName string, version uint64
 	return
 }
 
-func (c *RestClient) BalanceOf(address string) (balance *big.Int, err error) {
-	t := "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
+func (c *RestClient) AptosBalanceOf(address string) (balance *big.Int, err error) {
+	return c.BalanceOf(address, "0x1::aptos_coin::AptosCoin")
+}
+
+func (c *RestClient) BalanceOf(address string, coinTag string) (balance *big.Int, err error) {
+	t := "0x1::coin::CoinStore<" + coinTag + ">"
 	res, err := c.GetAccountResource(address, t, 0)
 	if err != nil {
+		if e := err.(*aptostypes.RestError); e != nil && e.Code == 404 {
+			return big.NewInt(0), nil
+		}
 		return nil, err
 	}
 	coin := res.Data["coin"].(map[string]interface{})

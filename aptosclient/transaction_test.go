@@ -180,7 +180,7 @@ func TestAccountBalance(t *testing.T) {
 
 	client, err := Dial(context.Background(), RestUrl)
 	checkError(t, err)
-	balance, err := client.BalanceOf(address)
+	balance, err := client.AptosBalanceOf(address)
 	checkError(t, err)
 	t.Log(balance)
 }
