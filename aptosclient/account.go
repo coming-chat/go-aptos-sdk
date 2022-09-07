@@ -42,6 +42,17 @@ func (c *RestClient) GetAccountResource(address string, resourceType string, ver
 	return
 }
 
+func (c *RestClient) IsAccountHasResource(address string, resourceType string, version uint64) (bool, error) {
+	_, err := c.GetAccountResource(address, resourceType, version)
+	if err == nil {
+		return true, nil
+	}
+	if e := err.(*aptostypes.RestError); e != nil && e.Code == 404 {
+		return false, nil
+	}
+	return false, err
+}
+
 func (c *RestClient) GetAccountModules(address string, version uint64) (res []aptostypes.MoveModule, err error) {
 	req, err := http.NewRequest("GET", c.GetVersionedRpcUrl()+"/accounts/"+address+"/modules", nil)
 	if err != nil {
