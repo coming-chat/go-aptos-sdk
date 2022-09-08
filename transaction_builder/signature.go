@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/coming-chat/lcs"
 	"golang.org/x/crypto/sha3"
@@ -13,9 +14,11 @@ const (
 	ED25519_PUBLICKEY_LENGTH = 32
 	ED25519_SIGNATURE_LENGTH = 64
 
-	MAX_SIGNATURE_SUPPORTED = 32
+	MAX_SIGNATURES_SUPPORTED = 32
 
 	MULTI_ED25519_SIGNATURE_BITMAP_LENGTH = 4
+
+	MULTI_ED25519_SCHEME = 0x1
 )
 
 type PublicKey interface{}
@@ -52,6 +55,27 @@ type MultiEd25519PublicKey struct {
 	Threshold  uint8              `lcs:"threshold"`
 }
 
+func NewMultiEd25519PublicKey(publicKeys [][]byte, threshold uint8) (*MultiEd25519PublicKey, error) {
+	if threshold > MAX_SIGNATURES_SUPPORTED {
+		return nil, fmt.Errorf(`"threshold" cannot be larger than %v`, MAX_SIGNATURES_SUPPORTED)
+	}
+	if int(threshold) > len(publicKeys) {
+		return nil, errors.New(`"threshold" cannot be larger than public key count.`)
+	}
+	pubkeys := []Ed25519PublicKey{}
+	for _, bytes := range publicKeys {
+		pubkey, err := NewEd25519PublicKey(bytes)
+		if err != nil {
+			return nil, err
+		}
+		pubkeys = append(pubkeys, *pubkey)
+	}
+	return &MultiEd25519PublicKey{
+		PublicKeys: pubkeys,
+		Threshold:  threshold,
+	}, nil
+}
+
 func (mp *MultiEd25519PublicKey) ToBytes() []byte {
 	bytes := make([]byte, len(mp.PublicKeys)*ED25519_PUBLICKEY_LENGTH+1)
 	for idx, pubkey := range mp.PublicKeys {
@@ -80,7 +104,7 @@ func (mp *MultiEd25519PublicKey) UnmarshalLCS(d *lcs.Decoder) error {
 }
 
 func (mp *MultiEd25519PublicKey) AuthenticationKey() [32]byte {
-	bytes := append(mp.ToBytes(), 0x01)
+	bytes := append(mp.ToBytes(), MULTI_ED25519_SCHEME)
 	authKey := sha3.Sum256(bytes)
 	return authKey
 }
@@ -93,6 +117,31 @@ func (mp *MultiEd25519PublicKey) Address() string {
 type MultiEd25519Signature struct {
 	Signatures []Ed25519Signature
 	Bitmap     []byte
+}
+
+func NewMultiEd25519Signature(signatures [][]byte, bits []uint8) (*MultiEd25519Signature, error) {
+	if len(signatures) != len(bits) {
+		return nil, errors.New("The number of signatures and bits are not the same.")
+	}
+	signs := []Ed25519Signature{}
+	sort.Slice(signatures, func(i, j int) bool {
+		return bits[i] < bits[j]
+	})
+	for _, bytes := range signatures {
+		signature, err := NewEd25519Signature(bytes)
+		if err != nil {
+			return nil, err
+		}
+		signs = append(signs, *signature)
+	}
+	bitmap, err := CreateBitmap(bits)
+	if err != nil {
+		return nil, err
+	}
+	return &MultiEd25519Signature{
+		Signatures: signs,
+		Bitmap:     bitmap,
+	}, nil
 }
 
 func (ms *MultiEd25519Signature) ToBytes() []byte {
@@ -132,7 +181,7 @@ func (ms *MultiEd25519Signature) UnmarshalLCS(d *lcs.Decoder) error {
  * [0, 2, 31]
  * ```
  * `[0, 2, 31]` means the 1st, 3rd and 32nd bits should be set in the bitmap.
- * The result bitmap should be 0b1010000000000000000000000000001
+ * The result bitmap should be 0b10100000000000000000000000000001
  *
  * @returns bitmap that is 32bit long
  */
@@ -142,7 +191,7 @@ func CreateBitmap(bits []uint8) ([]byte, error) {
 	dupCheckSet := make(map[uint8]bool)
 
 	for _, bit := range bits {
-		if bit >= MAX_SIGNATURE_SUPPORTED {
+		if bit >= MAX_SIGNATURES_SUPPORTED {
 			return nil, fmt.Errorf("Invalid bit value %v.", bit)
 		}
 		if dupCheckSet[bit] {

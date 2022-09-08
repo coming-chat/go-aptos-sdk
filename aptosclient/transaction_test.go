@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"math/big"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -12,6 +13,8 @@ import (
 	"github.com/coming-chat/go-aptos/aptosaccount"
 	"github.com/coming-chat/go-aptos/aptostypes"
 	txBuilder "github.com/coming-chat/go-aptos/transaction_builder"
+	"github.com/coming-chat/lcs"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -36,7 +39,7 @@ func TestTransferBCS(t *testing.T) {
 	accountData, err := client.GetAccount(fromAddress)
 	checkError(t, err)
 
-	txn, err := generateTransactionBcs(accountData, ledgerInfo, account, toAddress, amount)
+	txn, err := generateTransactionBcs(accountData, ledgerInfo, account.AuthKey, toAddress, amount)
 	checkError(t, err)
 
 	signedTxn, err := txBuilder.GenerateBCSTransaction(account, txn)
@@ -117,7 +120,7 @@ func TestBCSEncoder(t *testing.T) {
 	checkError(t, err)
 
 	// txn bcs
-	txnBcs, err := generateTransactionBcs(accountData, ledgerInfo, account, toAddress, amount)
+	txnBcs, err := generateTransactionBcs(accountData, ledgerInfo, account.AuthKey, toAddress, amount)
 	checkError(t, err)
 
 	signingMessageFromBcs, err := txnBcs.GetSigningMessage()
@@ -151,7 +154,7 @@ func TestEstimateTransactionFeeBcs(t *testing.T) {
 	accountData, err := client.GetAccount(fromAddress)
 	checkError(t, err)
 
-	txn, err := generateTransactionBcs(accountData, ledgerInfo, account, toAddress, amount)
+	txn, err := generateTransactionBcs(accountData, ledgerInfo, account.AuthKey, toAddress, amount)
 	checkError(t, err)
 
 	signedTxn, err := txBuilder.GenerateBCSSimulation(account.PublicKey, txn)
@@ -194,7 +197,7 @@ func checkError(t *testing.T, err error) {
 func generateTransactionBcs(
 	data *aptostypes.AccountCoreData,
 	info *aptostypes.LedgerInfo,
-	from *aptosaccount.Account,
+	fromAuthkey [32]byte,
 	to string, amount uint64) (txn *txBuilder.RawTransaction, err error) {
 
 	moduleName, err := txBuilder.NewModuleIdFromString("0x1::coin")
@@ -219,7 +222,7 @@ func generateTransactionBcs(
 		},
 	}
 	txn = &txBuilder.RawTransaction{
-		Sender:                  from.AuthKey,
+		Sender:                  fromAuthkey,
 		SequenceNumber:          data.SequenceNumber,
 		Payload:                 payload,
 		MaxGasAmount:            2000,
@@ -268,5 +271,101 @@ func txnSubmitableForTest(t *testing.T) bool {
 	default:
 		t.Log("Non-specified machines, stop sending transactions after signing: ", user)
 		return false
+	}
+}
+
+func TestMultiSignTransfer(t *testing.T) {
+	pri1 := [32]byte{1}
+	pri2 := [32]byte{2}
+	pri3 := [32]byte{3}
+	account1 := aptosaccount.NewAccount(pri1[:])
+	account2 := aptosaccount.NewAccount(pri2[:])
+	account3 := aptosaccount.NewAccount(pri3[:])
+	msPubkey, err := txBuilder.NewMultiEd25519PublicKey([][]byte{
+		account1.PublicKey,
+		account2.PublicKey,
+		account3.PublicKey,
+	}, 2)
+	t.Logf("%x", msPubkey.ToBytes())
+	t.Logf("%v", msPubkey.Address())
+
+	client, err := Dial(context.Background(), RestUrl)
+	assert.Nil(t, err)
+	ensureBalanceGreatherThan(t, client, msPubkey.Address(), 2000)
+
+	ledgerInfo, err := client.LedgerInfo()
+	assert.Nil(t, err)
+	accountData, err := client.GetAccount(msPubkey.Address())
+	assert.Nil(t, err)
+	txn, err := generateTransactionBcs(accountData, ledgerInfo, msPubkey.AuthenticationKey(), ReceiverAddress, 800)
+	assert.Nil(t, err)
+
+	// sign one by one
+	signatures := [][]byte{}
+	idxes := []uint8{}
+	accountSigning := func(account *aptosaccount.Account, rawTxn *txBuilder.RawTransaction) {
+		idx := indexOfPubkey(msPubkey, account.PublicKey)
+		assert.NotEqual(t, -1, idx, "the account not the member of the multi sign")
+		signingMsg, err := rawTxn.GetSigningMessage()
+		assert.Nil(t, err)
+		sign := account.Sign(signingMsg, "")
+
+		signatures = append(signatures, sign)
+		idxes = append(idxes, uint8(idx))
+	}
+
+	// Can be signed in any order: [1, 2], [3, 1], [3, 2], ...
+	accountSigning(account3, txn)
+	accountSigning(account1, txn)
+
+	msSignature, err := txBuilder.NewMultiEd25519Signature(signatures, idxes)
+	assert.Nil(t, err)
+	authenticator := txBuilder.TransactionAuthenticatorMultiEd25519{
+		PublicKey: *msPubkey,
+		Signature: *msSignature,
+	}
+	signedTxn := txBuilder.SignedTransaction{
+		Transaction:   txn,
+		Authenticator: authenticator,
+	}
+	signedTxnBytes, err := lcs.Marshal(signedTxn)
+	assert.Nil(t, err)
+
+	// batch sign with builder
+	// builder := txBuilder.TransactionBuilderMultiEd25519{
+	// 	SigningFn: func(sm txBuilder.SigningMessage) txBuilder.MultiEd25519Signature {
+	// 		sig1 := account1.Sign(sm, "")
+	// 		sig3 := account3.Sign(sm, "")
+
+	// 		signature, err := txBuilder.NewMultiEd25519Signature([][]byte{sig1, sig3}, []uint8{0, 2})
+	// 		assert.Nil(t, err)
+	// 		return *signature
+	// 	},
+	// 	PublicKey: *msPubkey,
+	// }
+	// signedTxnBytes, err := builder.Sign(txn)
+	// assert.Nil(t, err)
+
+	newTxn, err := client.SubmitSignedBCSTransaction(signedTxnBytes)
+	assert.Nil(t, err)
+
+	t.Logf("multi sign transaction success: %v\n hash = %v", newTxn, newTxn.Hash)
+}
+
+func indexOfPubkey(msPubkey *txBuilder.MultiEd25519PublicKey, pubkey []byte) int {
+	for idx, pub := range msPubkey.PublicKeys {
+		if bytes.Compare(pubkey, pub.PublicKey) == 0 {
+			return idx
+		}
+	}
+	return -1
+}
+
+func ensureBalanceGreatherThan(t *testing.T, client *RestClient, address string, amount uint64) {
+	balance, err := client.AptosBalanceOf(address)
+	assert.Nil(t, err)
+	if balance.Cmp(big.NewInt(int64(amount))) < 0 {
+		_, err = FaucetFundAccount(address, amount, "")
+		assert.Nil(t, err)
 	}
 }
