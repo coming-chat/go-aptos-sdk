@@ -3,6 +3,7 @@ package aptosaccount
 import (
 	"crypto/ed25519"
 	"errors"
+
 	"github.com/coming-chat/go-aptos/crypto/derivation"
 	"github.com/tyler-smith/go-bip39"
 	"golang.org/x/crypto/sha3"
@@ -77,4 +78,11 @@ func Sign(privateKey ed25519.PrivateKey, data []byte, salt string) []byte {
 
 	signingMessage := append(prefixBytes, data...)
 	return ed25519.Sign(privateKey, signingMessage)
+}
+
+func Verify(publicKey, message, signature []byte) bool {
+	if len(publicKey) != ed25519.PublicKeySize {
+		return false
+	}
+	return ed25519.Verify(ed25519.PublicKey(publicKey), message, signature)
 }
