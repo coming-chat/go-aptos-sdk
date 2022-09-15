@@ -4,6 +4,7 @@
 [![License](https://img.shields.io/badge/license-Apache-green.svg)](https://github.com/aptos-labs/aptos-core/blob/main/LICENSE)
 
 The Aptos Golang SDK for ComingChat.
+We welcome other developers to participate in the development and testing of golang-sdk @aptos-labs！
 
 ## Install
 
