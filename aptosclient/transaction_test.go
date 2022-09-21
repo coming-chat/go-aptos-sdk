@@ -15,6 +15,7 @@ import (
 	txBuilder "github.com/coming-chat/go-aptos/transaction_builder"
 	"github.com/coming-chat/lcs"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -189,9 +190,7 @@ func TestAccountBalance(t *testing.T) {
 }
 
 func checkError(t *testing.T, err error) {
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.Nil(t, err)
 }
 
 func generateTransactionBcs(
@@ -368,4 +367,14 @@ func ensureBalanceGreatherThan(t *testing.T, client *RestClient, address string,
 		_, err = FaucetFundAccount(address, amount, "")
 		assert.Nil(t, err)
 	}
+}
+
+func TestGasPrice(t *testing.T) {
+	client, err := Dial(context.Background(), RestUrl)
+	require.Nil(t, err)
+
+	price, err := client.EstimateGasPrice()
+	require.Nil(t, err)
+
+	t.Log(price)
 }

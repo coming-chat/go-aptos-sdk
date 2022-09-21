@@ -166,3 +166,20 @@ func (c *RestClient) CreateTransactionSigningMessage(transaction *aptostypes.Tra
 	message, err = hex.DecodeString(msgHex)
 	return
 }
+
+func (c *RestClient) EstimateGasPrice() (price uint64, err error) {
+	req, err := http.NewRequest("GET", c.GetVersionedRpcUrl()+"/estimate_gas_price", nil)
+	if err != nil {
+		return
+	}
+	req.Header["Content-Type"] = []string{"application/json"}
+
+	res := struct {
+		GasEstimate uint64 `json:"gas_estimate"`
+	}{}
+	err = doReq(req, &res)
+	if err != nil {
+		return
+	}
+	return res.GasEstimate, nil
+}
