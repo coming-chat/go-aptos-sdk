@@ -246,3 +246,9 @@ type AccountResource struct {
 	Type string                 `json:"type"` // match ^0x[0-9a-zA-Z:_<>]+$
 	Data map[string]interface{} `json:"data"`
 }
+
+type CoinInfo struct {
+	Decimals int
+	Symbol   string
+	Name     string
+}
