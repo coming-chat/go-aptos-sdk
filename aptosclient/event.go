@@ -16,7 +16,7 @@ func (c *RestClient) GetEventsByEventHandle(address, eventHandle, field string, 
 	q.Add("start", strconv.FormatUint(start, 10))
 	q.Add("limit", strconv.FormatUint(limit, 10))
 	req.URL.RawQuery = q.Encode()
-	err = doReq(req, &res)
+	err = c.doReq(req, &res)
 	return
 }
 
@@ -29,6 +29,6 @@ func (c *RestClient) GetEventsByCreationNumber(address string, creationNumber st
 	q.Add("start", strconv.FormatUint(start, 10))
 	q.Add("limit", strconv.FormatUint(limit, 10))
 	req.URL.RawQuery = q.Encode()
-	err = doReq(req, &res)
+	err = c.doReq(req, &res)
 	return
 }

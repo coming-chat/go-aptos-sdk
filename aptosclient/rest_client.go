@@ -67,7 +67,7 @@ func (c *RestClient) LedgerInfo() (res *aptostypes.LedgerInfo, err error) {
 		return
 	}
 	res = &aptostypes.LedgerInfo{}
-	err = doReq(req, res)
+	err = c.doReq(req, res)
 	return
 }
 
@@ -81,8 +81,11 @@ func (c *RestClient) setChainId() (err error) {
 }
 
 // doReq send request and unmarshal response body to result
-func doReq(req *http.Request, result interface{}) error {
-	client := &http.Client{}
+func (c *RestClient) doReq(req *http.Request, result interface{}) error {
+	return doReqWithClient(req, result, c.c)
+}
+
+func doReqWithClient(req *http.Request, result interface{}, client *http.Client) error {
 	resp, err := client.Do(req)
 	if err != nil {
 		return err

@@ -16,7 +16,7 @@ func (c *RestClient) GetBlockByHeight(height string, with_transactions bool) (bl
 	q.Add("with_transactions", strconv.FormatBool(with_transactions))
 	req.URL.RawQuery = q.Encode()
 	block = &aptostypes.Block{}
-	err = doReq(req, &block)
+	err = c.doReq(req, &block)
 	return
 }
 
@@ -29,6 +29,6 @@ func (c *RestClient) GetBlockByVersion(version string, with_transactions bool) (
 	q.Add("with_transactions", strconv.FormatBool(with_transactions))
 	req.URL.RawQuery = q.Encode()
 	block = &aptostypes.Block{}
-	err = doReq(req, &block)
+	err = c.doReq(req, &block)
 	return
 }
