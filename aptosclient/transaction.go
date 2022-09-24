@@ -23,7 +23,7 @@ func (c *RestClient) GetTransactions(start, limit uint64) (res []aptostypes.Tran
 		q.Add("limit", strconv.FormatUint(limit, 10))
 	}
 	req.URL.RawQuery = q.Encode()
-	err = doReq(req, &res)
+	err = c.doReq(req, &res)
 	return
 }
 
@@ -40,7 +40,7 @@ func (c *RestClient) GetAccountTransactions(account string, start, limit uint64)
 		q.Add("limit", strconv.FormatUint(limit, 10))
 	}
 	req.URL.RawQuery = q.Encode()
-	err = doReq(req, &res)
+	err = c.doReq(req, &res)
 	return
 }
 
@@ -50,7 +50,7 @@ func (c *RestClient) GetTransactionByHash(txHash string) (res *aptostypes.Transa
 		return
 	}
 	res = &aptostypes.Transaction{}
-	err = doReq(req, res)
+	err = c.doReq(req, res)
 	return
 }
 
@@ -60,7 +60,7 @@ func (c *RestClient) GetTransactionByVersion(txVersion string) (res *aptostypes.
 		return
 	}
 	res = &aptostypes.Transaction{}
-	err = doReq(req, res)
+	err = c.doReq(req, res)
 	return
 }
 
@@ -77,7 +77,7 @@ func (c *RestClient) SimulateSignedBCSTransaction(signedTxn []byte) (res []*apto
 	req.Header["Content-Type"] = []string{"application/x.aptos.signed_transaction+bcs"}
 
 	res = []*aptostypes.Transaction{}
-	err = doReq(req, &res)
+	err = c.doReq(req, &res)
 	return
 }
 
@@ -107,7 +107,7 @@ func (c *RestClient) SimulateTransaction(transaction *aptostypes.Transaction, se
 	req.Header["Content-Type"] = []string{"application/json"}
 
 	res = []*aptostypes.Transaction{}
-	err = doReq(req, &res)
+	err = c.doReq(req, &res)
 	return res, err
 }
 
@@ -124,7 +124,7 @@ func (c *RestClient) SubmitSignedBCSTransaction(signedTxn []byte) (res *aptostyp
 	req.Header["Content-Type"] = []string{"application/x.aptos.signed_transaction+bcs"}
 
 	res = &aptostypes.Transaction{}
-	err = doReq(req, res)
+	err = c.doReq(req, res)
 	return
 }
 
@@ -140,7 +140,7 @@ func (c *RestClient) SubmitTransaction(transaction *aptostypes.Transaction) (res
 	req.Header["Content-Type"] = []string{"application/json"}
 
 	res = &aptostypes.Transaction{}
-	err = doReq(req, res)
+	err = c.doReq(req, res)
 	return
 }
 
@@ -156,7 +156,7 @@ func (c *RestClient) CreateTransactionSigningMessage(transaction *aptostypes.Tra
 	req.Header["Content-Type"] = []string{"application/json"}
 
 	var msgHex string
-	err = doReq(req, &msgHex)
+	err = c.doReq(req, &msgHex)
 	if err != nil {
 		return
 	}
@@ -177,7 +177,7 @@ func (c *RestClient) EstimateGasPrice() (price uint64, err error) {
 	res := struct {
 		GasEstimate uint64 `json:"gas_estimate"`
 	}{}
-	err = doReq(req, &res)
+	err = c.doReq(req, &res)
 	if err != nil {
 		return
 	}

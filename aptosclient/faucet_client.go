@@ -23,6 +23,6 @@ func FaucetFundAccount(address string, amount uint64, faucetUrl string) (hashs [
 		return
 	}
 	hashs = []string{}
-	err = doReq(req, &hashs)
+	err = doReqWithClient(req, &hashs, &http.Client{})
 	return
 }

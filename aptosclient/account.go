@@ -14,7 +14,7 @@ func (c *RestClient) GetAccount(address string) (res *aptostypes.AccountCoreData
 		return
 	}
 	res = &aptostypes.AccountCoreData{}
-	err = doReq(req, res)
+	err = c.doReq(req, res)
 	return
 }
 
@@ -23,7 +23,7 @@ func (c *RestClient) GetAccountResources(address string) (res []aptostypes.Accou
 	if err != nil {
 		return
 	}
-	err = doReq(req, &res)
+	err = c.doReq(req, &res)
 	return
 }
 
@@ -38,7 +38,7 @@ func (c *RestClient) GetAccountResource(address string, resourceType string, ver
 		q.Add("version", strconv.FormatUint(version, 10))
 		req.URL.RawQuery = q.Encode()
 	}
-	err = doReq(req, &res)
+	err = c.doReq(req, &res)
 	return
 }
 
@@ -63,7 +63,7 @@ func (c *RestClient) GetAccountModules(address string, version uint64) (res []ap
 		q.Add("version", strconv.FormatUint(version, 10))
 		req.URL.RawQuery = q.Encode()
 	}
-	err = doReq(req, &res)
+	err = c.doReq(req, &res)
 	return
 }
 
@@ -78,7 +78,7 @@ func (c *RestClient) GetAccountModule(address, moduleName string, version uint64
 		req.URL.RawQuery = q.Encode()
 	}
 	res = &aptostypes.MoveModule{}
-	err = doReq(req, res)
+	err = c.doReq(req, res)
 	return
 }
 
