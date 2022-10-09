@@ -39,6 +39,7 @@ func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 	return NewAccount(key.Key), nil
 }
 
+// GetOldVersionPrivateKeyWithMnemonic Deprecated
 func GetOldVersionPrivateKeyWithMnemonic(mnemonic string) ([]byte, error) {
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
 	if err != nil {
@@ -84,5 +85,5 @@ func Verify(publicKey, message, signature []byte) bool {
 	if len(publicKey) != ed25519.PublicKeySize {
 		return false
 	}
-	return ed25519.Verify(ed25519.PublicKey(publicKey), message, signature)
+	return ed25519.Verify(publicKey, message, signature)
 }
