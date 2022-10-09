@@ -1,10 +1,14 @@
 package aptosaccount
 
 import (
+	"crypto/ed25519"
+	"reflect"
 	"testing"
 )
 
 const mnemonic = "crack coil okay hotel glue embark all employ east impact stomach cigar"
+
+var seed = [32]byte{164, 52, 187, 8, 138, 232, 166, 157, 88, 132, 167, 31, 232, 86, 153, 185, 160, 88, 207, 158, 43, 104, 143, 80, 48, 155, 175, 178, 241, 78, 196, 78}
 
 func TestAccountSign(t *testing.T) {
 	account, err := NewAccountWithMnemonic(mnemonic)
@@ -24,4 +28,80 @@ func TestAccountSign(t *testing.T) {
 	signature := account.Sign(data, salt)
 
 	t.Logf("%x", signature)
+}
+
+func TestAccount_Sign_Verify(t *testing.T) {
+	type fields struct {
+		PrivateKey ed25519.PrivateKey
+		PublicKey  ed25519.PublicKey
+		AuthKey    [32]byte
+	}
+	type args struct {
+		data []byte
+		salt string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+	}{
+		{
+			name: "test case 1",
+			fields: fields{
+				PublicKey:  NewAccount(seed[:]).PublicKey,
+				PrivateKey: NewAccount(seed[:]).PrivateKey,
+				AuthKey:    NewAccount(seed[:]).AuthKey,
+			},
+			args: args{
+				data: []byte{0x01},
+				salt: "",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			a := &Account{
+				PrivateKey: tt.fields.PrivateKey,
+				PublicKey:  tt.fields.PublicKey,
+				AuthKey:    tt.fields.AuthKey,
+			}
+			if got := a.Sign(tt.args.data, tt.args.salt); !Verify(a.PublicKey, tt.args.data, got) {
+				t.Errorf("Sign() = %v, verify %v", got, false)
+			}
+		})
+	}
+}
+
+func TestNewAccountWithMnemonic(t *testing.T) {
+	type args struct {
+		mnemonic string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *Account
+		wantErr bool
+	}{
+		{
+			name: "test case 1",
+			args: args{
+				mnemonic: mnemonic,
+			},
+			want:    NewAccount(seed[:]),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := NewAccountWithMnemonic(tt.args.mnemonic)
+			t.Log(got)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewAccountWithMnemonic() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewAccountWithMnemonic() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
