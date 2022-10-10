@@ -1,6 +1,7 @@
 package nft
 
 import (
+	"encoding/json"
 	"strconv"
 
 	"github.com/coming-chat/go-aptos/aptosclient"
@@ -45,6 +46,10 @@ type TokenDataId struct {
 	Collection string `json:"collection"`
 	/** Name of Token */
 	Name string `json:"name"`
+}
+
+func (id *TokenDataId) identifier() string {
+	return id.Creator + id.Collection + id.Name
 }
 
 type TokenId struct {
@@ -186,4 +191,86 @@ func (c *TokenClient) GetTokenForAccount(account txnBuilder.AccountAddress, toke
 	}
 
 	return &out, nil
+}
+
+type NFTInfo struct {
+	TokenData        *TokenData
+	TokenId          *TokenDataId
+	RelatedHash      string
+	RelatedTimestamp uint64
+}
+
+func (c *TokenClient) GetAllTokenForAccount(account txnBuilder.AccountAddress) ([]*NFTInfo, error) {
+	// 我们需要遍历该用户所有的交易，从中筛选出获得 NFT 的交易，再根据其中的 NFT 信息去查询详细的数据
+
+	owner := account.ToShortString()
+
+	nfts := []*NFTInfo{}
+	existsNfts := make(map[string]bool, 0)
+	parseNftsFromTransactions := func(txns []aptostypes.Transaction) error {
+		for _, txn := range txns {
+			if !txn.Success {
+				continue
+			}
+			for _, event := range txn.Events {
+				if event.Type != "0x3::token::DepositEvent" || event.Guid.AccountAddress != owner {
+					continue
+				}
+				bytes, err := json.Marshal(event.Data)
+				if err != nil {
+					continue
+				}
+				token := Token{}
+				err = json.Unmarshal(bytes, &token)
+				if err != nil {
+					continue
+				}
+				tokenInfo := token.Id.TokenDataId
+				if existsNfts[tokenInfo.identifier()] {
+					continue
+				}
+				creator, err := txnBuilder.NewAccountAddressFromHex(tokenInfo.Creator)
+				if err != nil {
+					continue
+				}
+
+				tokenData, err := c.GetTokenData(*creator, tokenInfo.Collection, tokenInfo.Name)
+				if err != nil {
+					return err
+				}
+
+				nft := NFTInfo{
+					TokenData:        tokenData,
+					TokenId:          &tokenInfo,
+					RelatedHash:      txn.Hash,
+					RelatedTimestamp: txn.Timestamp,
+				}
+				nfts = append(nfts, &nft)
+				existsNfts[tokenInfo.identifier()] = true
+			}
+		}
+		return nil
+	}
+
+	const limit = 200
+	offset := uint64(0)
+	for {
+		txns, err := c.GetAccountTransactions(owner, offset, limit)
+		if err != nil {
+			return nil, err
+		}
+
+		err = parseNftsFromTransactions(txns)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(txns) < limit {
+			break
+		} else {
+			offset = offset + limit
+		}
+	}
+
+	return nfts, nil
 }

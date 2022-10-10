@@ -203,7 +203,13 @@ type (
 
 //go:generate go run github.com/fjl/gencodec -type Event -field-override eventMarshaling -out gen_event_json.go
 
+type Guid struct {
+	CreationNumber string `json:"creation_number"`
+	AccountAddress string `json:"account_address"`
+}
+
 type Event struct {
+	Guid           *Guid       `json:"guid,omitempty"`
 	Key            string      `json:"key"`
 	SequenceNumber uint64      `json:"sequence_number"`
 	Type           string      `json:"type"` // eg. 0x1::aptos_coin::AptosCoin, match ^(bool|u8|u64|u128|address|signer|vector<.+>|0x[0-9a-zA-Z:_<, >]+)$

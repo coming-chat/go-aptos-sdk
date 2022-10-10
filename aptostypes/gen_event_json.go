@@ -11,6 +11,7 @@ var _ = (*eventMarshaling)(nil)
 // MarshalJSON marshals as JSON.
 func (e Event) MarshalJSON() ([]byte, error) {
 	type Event struct {
+		Guid           *Guid       `json:"guid,omitempty"`
 		Key            string      `json:"key"`
 		SequenceNumber jsonUint64  `json:"sequence_number"`
 		Type           string      `json:"type"`
@@ -29,6 +30,7 @@ func (e Event) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals from JSON.
 func (e *Event) UnmarshalJSON(input []byte) error {
 	type Event struct {
+		Guid           *Guid       `json:"guid,omitempty"`
 		Key            *string     `json:"key"`
 		SequenceNumber *jsonUint64 `json:"sequence_number"`
 		Type           *string     `json:"type"`
@@ -38,6 +40,9 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 	var dec Event
 	if err := json.Unmarshal(input, &dec); err != nil {
 		return err
+	}
+	if dec.Guid != nil {
+		e.Guid = dec.Guid
 	}
 	if dec.Key != nil {
 		e.Key = *dec.Key

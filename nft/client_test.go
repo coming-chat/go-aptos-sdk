@@ -56,3 +56,10 @@ func TestGetTokenForAccount(t *testing.T) {
 	require.Nil(t, err)
 	t.Log(data)
 }
+
+func TestGetAllTokenForAccount(t *testing.T) {
+	owner, _ := txnBuilder.NewAccountAddressFromHex("0x559c26e61a74a1c40244212e768ab282a2cbe2ed679ad8421f7d5ebfb2b79fb5")
+	nfts, err := tokenClient.GetAllTokenForAccount(*owner)
+	require.Nil(t, err)
+	t.Log(nfts)
+}
