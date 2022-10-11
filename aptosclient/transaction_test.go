@@ -14,84 +14,61 @@ import (
 	"github.com/coming-chat/go-aptos/aptostypes"
 	txBuilder "github.com/coming-chat/go-aptos/transaction_builder"
 	"github.com/coming-chat/lcs"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 const (
 	Mnemonic        = "crack coil okay hotel glue embark all employ east impact stomach cigar"
+	MnemonicAddress = "0x559c26e61a74a1c40244212e768ab282a2cbe2ed679ad8421f7d5ebfb2b79fb5"
 	ReceiverAddress = "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
 )
+
+func TestFaucet(t *testing.T) {
+	// address := ReceiverAddress
+	address := MnemonicAddress
+	hashs, err := FaucetFundAccount(address, 1000, "")
+	require.Nil(t, err)
+	t.Log(hashs)
+}
+
+func TestAccountBalance(t *testing.T) {
+	address := MnemonicAddress
+
+	client, err := Dial(context.Background(), RestUrl)
+	require.Nil(t, err)
+	balance, err := client.AptosBalanceOf(address)
+	require.Nil(t, err)
+	t.Log(balance)
+}
 
 func TestTransferBCS(t *testing.T) {
 	toAddress := ReceiverAddress
 	amount := uint64(100)
 
 	account, err := aptosaccount.NewAccountWithMnemonic(Mnemonic)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	client, err := Dial(context.Background(), RestUrl)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	ledgerInfo, err := client.LedgerInfo()
-	checkError(t, err)
+	require.Nil(t, err)
 
 	fromAddress := "0x" + hex.EncodeToString(account.AuthKey[:])
 	accountData, err := client.GetAccount(fromAddress)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	txn, err := generateTransactionBcs(accountData, ledgerInfo, account.AuthKey, toAddress, amount)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	signedTxn, err := txBuilder.GenerateBCSTransaction(account, txn)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	if !txnSubmitableForTest(t) {
 		return
 	}
 	newTxn, err := client.SubmitSignedBCSTransaction(signedTxn)
-	checkError(t, err)
-
-	t.Logf("submited tx hash = %v", newTxn.Hash)
-}
-
-func TestTransferJson(t *testing.T) {
-	toAddress := ReceiverAddress
-	amount := uint64(100)
-
-	account, err := aptosaccount.NewAccountWithMnemonic(Mnemonic)
-	checkError(t, err)
-
-	client, err := Dial(context.Background(), RestUrl)
-	checkError(t, err)
-
-	ledgerInfo, err := client.LedgerInfo()
-	checkError(t, err)
-
-	fromAddress := "0x" + hex.EncodeToString(account.AuthKey[:])
-	accountData, err := client.GetAccount(fromAddress)
-	checkError(t, err)
-
-	txn, err := generateTransactionJson(accountData, ledgerInfo, account, toAddress, amount)
-	checkError(t, err)
-
-	signingMessage, err := client.CreateTransactionSigningMessage(txn)
-	checkError(t, err)
-
-	signatureData := account.Sign(signingMessage, "")
-	publicKey := "0x" + hex.EncodeToString(account.PublicKey)
-	signatureHex := "0x" + hex.EncodeToString(signatureData)
-	txn.Signature = &aptostypes.Signature{
-		Type:      "ed25519_signature",
-		PublicKey: publicKey,
-		Signature: signatureHex,
-	}
-
-	if !txnSubmitableForTest(t) {
-		return
-	}
-	newTxn, err := client.SubmitTransaction(txn)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	t.Logf("submited tx hash = %v", newTxn.Hash)
 }
@@ -101,41 +78,36 @@ func TestBCSEncoder(t *testing.T) {
 	amount := uint64(100)
 
 	account, err := aptosaccount.NewAccountWithMnemonic(Mnemonic)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	client, err := Dial(context.Background(), RestUrl)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	ledgerInfo, err := client.LedgerInfo()
-	checkError(t, err)
+	require.Nil(t, err)
 
 	fromAddress := "0x" + hex.EncodeToString(account.AuthKey[:])
 	accountData, err := client.GetAccount(fromAddress)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	// txn json
 	txnJson, err := generateTransactionJson(accountData, ledgerInfo, account, toAddress, amount)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	signingMessageFromJson, err := client.CreateTransactionSigningMessage(txnJson)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	// txn bcs
 	txnBcs, err := generateTransactionBcs(accountData, ledgerInfo, account.AuthKey, toAddress, amount)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	signingMessageFromBcs, err := txnBcs.GetSigningMessage()
-	checkError(t, err)
+	require.Nil(t, err)
 
 	// compare bcs encoded results between remote server and local.
-	if bytes.Compare(signingMessageFromJson, signingMessageFromBcs) == 0 {
-		t.Logf("signingMessage = %x", signingMessageFromBcs)
-		t.Log("generate bcs passed")
-	} else {
-		t.Logf("json = %x", signingMessageFromJson)
-		t.Logf("bcs  = %x", signingMessageFromBcs)
-		t.Fatal("generate bcs failed")
-	}
+	hexStringBcs := hex.EncodeToString(signingMessageFromBcs)
+	hexStringJson := hex.EncodeToString(signingMessageFromJson)
+	require.Equal(t, hexStringBcs, hexStringJson)
 }
 
 func TestEstimateTransactionFeeBcs(t *testing.T) {
@@ -143,26 +115,26 @@ func TestEstimateTransactionFeeBcs(t *testing.T) {
 	amount := uint64(100)
 
 	account, err := aptosaccount.NewAccountWithMnemonic(Mnemonic)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	client, err := Dial(context.Background(), RestUrl)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	ledgerInfo, err := client.LedgerInfo()
-	checkError(t, err)
+	require.Nil(t, err)
 
 	fromAddress := "0x" + hex.EncodeToString(account.AuthKey[:])
 	accountData, err := client.GetAccount(fromAddress)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	txn, err := generateTransactionBcs(accountData, ledgerInfo, account.AuthKey, toAddress, amount)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	signedTxn, err := txBuilder.GenerateBCSSimulation(account.PublicKey, txn)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	newTxns, err := client.SimulateSignedBCSTransaction(signedTxn)
-	checkError(t, err)
+	require.Nil(t, err)
 
 	if len(newTxns) == 0 {
 		t.Fatal("simlated txn count empty")
@@ -170,27 +142,6 @@ func TestEstimateTransactionFeeBcs(t *testing.T) {
 	firstTxn := newTxns[0]
 	t.Logf("simlated tx hash = %v", firstTxn.Hash)
 	t.Logf("gas price = %v, gas used = %v", firstTxn.GasUnitPrice, firstTxn.GasUsed)
-}
-
-func TestFaucet(t *testing.T) {
-	address := ReceiverAddress
-	hashs, err := FaucetFundAccount(address, 1000, "")
-	checkError(t, err)
-	t.Log(hashs)
-}
-
-func TestAccountBalance(t *testing.T) {
-	address := ReceiverAddress
-
-	client, err := Dial(context.Background(), RestUrl)
-	checkError(t, err)
-	balance, err := client.AptosBalanceOf(address)
-	checkError(t, err)
-	t.Log(balance)
-}
-
-func checkError(t *testing.T, err error) {
-	require.Nil(t, err)
 }
 
 func generateTransactionBcs(
@@ -289,24 +240,24 @@ func TestMultiSignTransfer(t *testing.T) {
 	t.Logf("%v", msPubkey.Address())
 
 	client, err := Dial(context.Background(), RestUrl)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	ensureBalanceGreatherThan(t, client, msPubkey.Address(), 2000)
 
 	ledgerInfo, err := client.LedgerInfo()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	accountData, err := client.GetAccount(msPubkey.Address())
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	txn, err := generateTransactionBcs(accountData, ledgerInfo, msPubkey.AuthenticationKey(), ReceiverAddress, 800)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// sign one by one
 	signatures := [][]byte{}
 	idxes := []uint8{}
 	accountSigning := func(account *aptosaccount.Account, rawTxn *txBuilder.RawTransaction) {
 		idx := indexOfPubkey(msPubkey, account.PublicKey)
-		assert.NotEqual(t, -1, idx, "the account not the member of the multi sign")
+		require.NotEqual(t, -1, idx, "the account not the member of the multi sign")
 		signingMsg, err := rawTxn.GetSigningMessage()
-		assert.Nil(t, err)
+		require.Nil(t, err)
 		sign := account.Sign(signingMsg, "")
 
 		signatures = append(signatures, sign)
@@ -318,7 +269,7 @@ func TestMultiSignTransfer(t *testing.T) {
 	accountSigning(account1, txn)
 
 	msSignature, err := txBuilder.NewMultiEd25519Signature(signatures, idxes)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	authenticator := txBuilder.TransactionAuthenticatorMultiEd25519{
 		PublicKey: *msPubkey,
 		Signature: *msSignature,
@@ -328,7 +279,7 @@ func TestMultiSignTransfer(t *testing.T) {
 		Authenticator: authenticator,
 	}
 	signedTxnBytes, err := lcs.Marshal(signedTxn)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// batch sign with builder
 	// builder := txBuilder.TransactionBuilderMultiEd25519{
@@ -337,16 +288,19 @@ func TestMultiSignTransfer(t *testing.T) {
 	// 		sig3 := account3.Sign(sm, "")
 
 	// 		signature, err := txBuilder.NewMultiEd25519Signature([][]byte{sig1, sig3}, []uint8{0, 2})
-	// 		assert.Nil(t, err)
+	// 		require.Nil(t, err)
 	// 		return *signature
 	// 	},
 	// 	PublicKey: *msPubkey,
 	// }
 	// signedTxnBytes, err := builder.Sign(txn)
-	// assert.Nil(t, err)
+	// require.Nil(t, err)
 
+	if !txnSubmitableForTest(t) {
+		return
+	}
 	newTxn, err := client.SubmitSignedBCSTransaction(signedTxnBytes)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	t.Logf("multi sign transaction success: %v\n hash = %v", newTxn, newTxn.Hash)
 }
@@ -362,10 +316,10 @@ func indexOfPubkey(msPubkey *txBuilder.MultiEd25519PublicKey, pubkey []byte) int
 
 func ensureBalanceGreatherThan(t *testing.T, client *RestClient, address string, amount uint64) {
 	balance, err := client.AptosBalanceOf(address)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	if balance.Cmp(big.NewInt(int64(amount))) < 0 {
 		_, err = FaucetFundAccount(address, amount, "")
-		assert.Nil(t, err)
+		require.Nil(t, err)
 	}
 }
 
