@@ -58,6 +58,9 @@ client, err := aptosclient.Dial(context.Background(), restUrl)
 accountData, err := client.GetAccount(fromAddress)
 ledgerInfo, err := client.LedgerInfo()
 
+// Get gas price
+gasPrice, err := client.EstimateGasPrice()
+
 // Build paylod
 moduleName, err := txBuilder.NewModuleIdFromString("0x1::account")
 toAddr, err := txBuilder.NewAccountAddressFromHex(toAddress)
@@ -78,7 +81,7 @@ txn = &txBuilder.RawTransaction{
 	SequenceNumber:          data.SequenceNumber,
 	Payload:                 payload,
 	MaxGasAmount:            2000,
-	GasUnitPrice:            1,
+	GasUnitPrice:            gasPrice,
 	ExpirationTimestampSecs: info.LedgerTimestamp + 600,
 	ChainId:                 uint8(info.ChainId),
 }
@@ -112,6 +115,9 @@ client, err := aptosclient.Dial(context.Background(), restUrl)
 accountData, err := client.GetAccount(fromAddress)
 ledgerInfo, err := client.LedgerInfo()
 
+// Get gas price
+gasPrice, err := client.EstimateGasPrice()
+
 // Build paylod
 payload := &aptostypes.Payload{
 	Type: 		   "entry_function_payload",
@@ -127,7 +133,7 @@ transaction := &aptostypes.Transaction{
 	Sender:                  fromAddress,
 	SequenceNumber:          accountData.SequenceNumber,
 	MaxGasAmount:            2000,
-	GasUnitPrice:            1,
+	GasUnitPrice:            gasPrice,
 	Payload:                 payload,
 	ExpirationTimestampSecs: ledgerInfo.LedgerTimestamp + 600, // 10 minutes timeout
 }
@@ -156,5 +162,5 @@ fmt.Printf("tx hash = %v\n", newTx.Hash)
 ## TODO
 
 - [x] Locally implement BCS encoding of coin transfer transaction data
-- [ ] Support Move action BCS
+- [x] Support Move action BCS
 - [ ] Support Multi sign
