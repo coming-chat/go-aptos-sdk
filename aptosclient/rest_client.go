@@ -80,6 +80,10 @@ func (c *RestClient) setChainId() (err error) {
 	return
 }
 
+func (c *RestClient) ChainId() int {
+	return c.chainId
+}
+
 // doReq send request and unmarshal response body to result
 func (c *RestClient) doReq(req *http.Request, result interface{}) error {
 	return doReqWithClient(req, result, c.c)
