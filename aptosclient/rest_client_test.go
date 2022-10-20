@@ -1,47 +1,33 @@
 package aptosclient
 
 import (
-	"context"
 	"strconv"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
-// const RestUrl = "https://aptosdev.coming.chat/v1"
-const RestUrl = "https://fullnode.devnet.aptoslabs.com/"
-
 func TestLedgerInfo(t *testing.T) {
-	client, err := Dial(context.Background(), RestUrl)
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := Client(t, DevnetRestUrl)
 	ledgerInfo, err := client.LedgerInfo()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.Nil(t, err)
 	t.Log(ledgerInfo)
 }
 
 func TestTransactionDetail(t *testing.T) {
-	client, err := Dial(context.Background(), RestUrl)
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := Client(t, DevnetRestUrl)
 
 	version := "500000"
 	tx1, err := client.GetTransactionByVersion(version)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.Nil(t, err)
 	t.Logf("tx.hash = %v", tx1.Hash)
 
 	hash := tx1.Hash
 	tx2, err := client.GetTransactionByHash(hash)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.Nil(t, err)
 	t.Logf("tx.version = %v", tx2.Version)
 
-	if strconv.FormatUint(tx2.Version, 10) != version {
-		t.Fatal("Transaction's version and hash not match.")
-	}
+	tx2Version := strconv.FormatUint(tx2.Version, 10)
+	require.Equal(t, tx2Version, version, "Transaction's version and hash not match.")
+	require.Equal(t, tx1.Hash, tx2.Hash)
 }

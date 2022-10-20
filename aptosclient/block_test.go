@@ -1,7 +1,6 @@
 package aptosclient
 
 import (
-	"context"
 	"net/http"
 	"testing"
 
@@ -9,11 +8,8 @@ import (
 )
 
 func TestRestClient_GetBlockByHeight(t *testing.T) {
-	url := "https://fullnode.devnet.aptoslabs.com"
-	client, err := Dial(context.Background(), url)
-	if err != nil {
-		panic(err)
-	}
+	url := DevnetRestUrl
+	client := Client(t, url)
 	type fields struct {
 		chainId int
 		c       *http.Client

@@ -2,12 +2,9 @@ package aptosclient
 
 import (
 	"bytes"
-	"context"
 	"encoding/hex"
 	"math/big"
-	"os/exec"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/coming-chat/go-aptos/aptosaccount"
@@ -20,7 +17,7 @@ import (
 const (
 	Mnemonic        = "crack coil okay hotel glue embark all employ east impact stomach cigar"
 	MnemonicAddress = "0x559c26e61a74a1c40244212e768ab282a2cbe2ed679ad8421f7d5ebfb2b79fb5"
-	ReceiverAddress = "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
+	ReceiverAddress = "0x6ed6f83f1891e02c00c58bf8172e3311c982b1c4fbb1be2d85a55562d4085fb1"
 )
 
 func TestFaucet(t *testing.T) {
@@ -34,8 +31,7 @@ func TestFaucet(t *testing.T) {
 func TestAccountBalance(t *testing.T) {
 	address := MnemonicAddress
 
-	client, err := Dial(context.Background(), RestUrl)
-	require.Nil(t, err)
+	client := Client(t, DevnetRestUrl)
 	balance, err := client.AptosBalanceOf(address)
 	require.Nil(t, err)
 	t.Log(balance)
@@ -45,23 +41,16 @@ func TestTransferBCS(t *testing.T) {
 	toAddress := ReceiverAddress
 	amount := uint64(100)
 
+	client := Client(t, DevnetRestUrl)
 	account, err := aptosaccount.NewAccountWithMnemonic(Mnemonic)
 	require.Nil(t, err)
 
-	client, err := Dial(context.Background(), RestUrl)
-	require.Nil(t, err)
+	params := transferParams{}
+	params.transferFrom(t, account.AuthKey, client)
+	params.transferTo(toAddress, amount)
+	bcsTxn := params.generateTransactionBcs(t)
 
-	ledgerInfo, err := client.LedgerInfo()
-	require.Nil(t, err)
-
-	fromAddress := "0x" + hex.EncodeToString(account.AuthKey[:])
-	accountData, err := client.GetAccount(fromAddress)
-	require.Nil(t, err)
-
-	txn, err := generateTransactionBcs(accountData, ledgerInfo, account.AuthKey, toAddress, amount)
-	require.Nil(t, err)
-
-	signedTxn, err := txBuilder.GenerateBCSTransaction(account, txn)
+	signedTxn, err := txBuilder.GenerateBCSTransaction(account, bcsTxn)
 	require.Nil(t, err)
 
 	if !txnSubmitableForTest(t) {
@@ -77,30 +66,21 @@ func TestBCSEncoder(t *testing.T) {
 	toAddress := ReceiverAddress
 	amount := uint64(100)
 
+	client := Client(t, DevnetRestUrl)
 	account, err := aptosaccount.NewAccountWithMnemonic(Mnemonic)
 	require.Nil(t, err)
 
-	client, err := Dial(context.Background(), RestUrl)
-	require.Nil(t, err)
-
-	ledgerInfo, err := client.LedgerInfo()
-	require.Nil(t, err)
-
-	fromAddress := "0x" + hex.EncodeToString(account.AuthKey[:])
-	accountData, err := client.GetAccount(fromAddress)
-	require.Nil(t, err)
+	params := transferParams{}
+	params.transferFrom(t, account.AuthKey, client)
+	params.transferTo(toAddress, amount)
 
 	// txn json
-	txnJson, err := generateTransactionJson(accountData, ledgerInfo, account, toAddress, amount)
-	require.Nil(t, err)
-
+	txnJson := params.generateTransactionJson()
 	signingMessageFromJson, err := client.CreateTransactionSigningMessage(txnJson)
 	require.Nil(t, err)
 
 	// txn bcs
-	txnBcs, err := generateTransactionBcs(accountData, ledgerInfo, account.AuthKey, toAddress, amount)
-	require.Nil(t, err)
-
+	txnBcs := params.generateTransactionBcs(t)
 	signingMessageFromBcs, err := txnBcs.GetSigningMessage()
 	require.Nil(t, err)
 
@@ -114,25 +94,17 @@ func TestEstimateTransactionFeeBcs(t *testing.T) {
 	toAddress := ReceiverAddress
 	amount := uint64(100)
 
+	client := Client(t, DevnetRestUrl)
 	account, err := aptosaccount.NewAccountWithMnemonic(Mnemonic)
 	require.Nil(t, err)
 
-	client, err := Dial(context.Background(), RestUrl)
-	require.Nil(t, err)
+	params := transferParams{}
+	params.transferFrom(t, account.AuthKey, client)
+	params.transferTo(toAddress, amount)
 
-	ledgerInfo, err := client.LedgerInfo()
+	bcsTxn := params.generateTransactionBcs(t)
+	signedTxn, err := txBuilder.GenerateBCSSimulation(account.PublicKey, bcsTxn)
 	require.Nil(t, err)
-
-	fromAddress := "0x" + hex.EncodeToString(account.AuthKey[:])
-	accountData, err := client.GetAccount(fromAddress)
-	require.Nil(t, err)
-
-	txn, err := generateTransactionBcs(accountData, ledgerInfo, account.AuthKey, toAddress, amount)
-	require.Nil(t, err)
-
-	signedTxn, err := txBuilder.GenerateBCSSimulation(account.PublicKey, txn)
-	require.Nil(t, err)
-
 	newTxns, err := client.SimulateSignedBCSTransaction(signedTxn)
 	require.Nil(t, err)
 
@@ -142,86 +114,6 @@ func TestEstimateTransactionFeeBcs(t *testing.T) {
 	firstTxn := newTxns[0]
 	t.Logf("simlated tx hash = %v", firstTxn.Hash)
 	t.Logf("gas price = %v, gas used = %v", firstTxn.GasUnitPrice, firstTxn.GasUsed)
-}
-
-func generateTransactionBcs(
-	data *aptostypes.AccountCoreData,
-	info *aptostypes.LedgerInfo,
-	fromAuthkey [32]byte,
-	to string, amount uint64) (txn *txBuilder.RawTransaction, err error) {
-
-	moduleName, err := txBuilder.NewModuleIdFromString("0x1::coin")
-	if err != nil {
-		return
-	}
-	token, err := txBuilder.NewTypeTagStructFromString("0x1::aptos_coin::AptosCoin")
-	if err != nil {
-		return
-	}
-	toAddr, err := txBuilder.NewAccountAddressFromHex(to)
-	if err != nil {
-		return
-	}
-	toAmountBytes := txBuilder.BCSSerializeBasicValue(amount)
-	payload := txBuilder.TransactionPayloadEntryFunction{
-		ModuleName:   *moduleName,
-		FunctionName: "transfer",
-		TyArgs:       []txBuilder.TypeTag{*token},
-		Args: [][]byte{
-			toAddr[:], toAmountBytes,
-		},
-	}
-	txn = &txBuilder.RawTransaction{
-		Sender:                  fromAuthkey,
-		SequenceNumber:          data.SequenceNumber,
-		Payload:                 payload,
-		MaxGasAmount:            2000,
-		GasUnitPrice:            1,
-		ExpirationTimestampSecs: info.LedgerTimestamp + 600,
-		ChainId:                 uint8(info.ChainId),
-	}
-	return
-}
-
-func generateTransactionJson(
-	data *aptostypes.AccountCoreData,
-	info *aptostypes.LedgerInfo,
-	from *aptosaccount.Account,
-	to string, amount uint64) (txn *aptostypes.Transaction, err error) {
-
-	amountString := strconv.FormatUint(amount, 10)
-	payload := &aptostypes.Payload{
-		Type:          aptostypes.EntryFunctionPayload,
-		Function:      "0x1::coin::transfer",
-		TypeArguments: []string{"0x1::aptos_coin::AptosCoin"},
-		// Function:      "0x1::account::transfer",
-		// TypeArguments: []string{},
-		Arguments: []interface{}{
-			to, amountString,
-		},
-	}
-	fromAddress := "0x" + hex.EncodeToString(from.AuthKey[:])
-	txn = &aptostypes.Transaction{
-		Sender:                  fromAddress,
-		SequenceNumber:          data.SequenceNumber,
-		MaxGasAmount:            2000,
-		GasUnitPrice:            1,
-		Payload:                 payload,
-		ExpirationTimestampSecs: info.LedgerTimestamp + 600,
-	}
-	return
-}
-
-func txnSubmitableForTest(t *testing.T) bool {
-	out, _ := exec.Command("whoami").Output()
-	user := strings.TrimSpace(string(out))
-	switch user {
-	case "gg":
-		return true
-	default:
-		t.Log("Non-specified machines, stop sending transactions after signing: ", user)
-		return false
-	}
 }
 
 func TestMultiSignTransfer(t *testing.T) {
@@ -239,16 +131,13 @@ func TestMultiSignTransfer(t *testing.T) {
 	t.Logf("%x", msPubkey.ToBytes())
 	t.Logf("%v", msPubkey.Address())
 
-	client, err := Dial(context.Background(), RestUrl)
-	require.Nil(t, err)
-	ensureBalanceGreatherThan(t, client, msPubkey.Address(), 2000)
+	client := Client(t, DevnetRestUrl)
+	ensureBalanceGreatherThan(t, &client, msPubkey.Address(), 2000)
 
-	ledgerInfo, err := client.LedgerInfo()
-	require.Nil(t, err)
-	accountData, err := client.GetAccount(msPubkey.Address())
-	require.Nil(t, err)
-	txn, err := generateTransactionBcs(accountData, ledgerInfo, msPubkey.AuthenticationKey(), ReceiverAddress, 800)
-	require.Nil(t, err)
+	params := transferParams{}
+	params.transferFrom(t, msPubkey.AuthenticationKey(), client)
+	params.transferTo(ReceiverAddress, 800)
+	txn := params.generateTransactionBcs(t)
 
 	// sign one by one
 	signatures := [][]byte{}
@@ -324,11 +213,86 @@ func ensureBalanceGreatherThan(t *testing.T, client *RestClient, address string,
 }
 
 func TestGasPrice(t *testing.T) {
-	client, err := Dial(context.Background(), RestUrl)
-	require.Nil(t, err)
-
+	client := Client(t, DevnetRestUrl)
 	price, err := client.EstimateGasPrice()
 	require.Nil(t, err)
-
 	t.Log(price)
+}
+
+type transferParams struct {
+	Receiver string
+	Amount   uint64
+
+	SenderKey   [32]byte
+	AccountData *aptostypes.AccountCoreData
+	LedgerInfo  *aptostypes.LedgerInfo
+	GasPrice    uint64
+}
+
+func (p *transferParams) transferFrom(t *testing.T, sender [32]byte, client RestClient) {
+	p.SenderKey = sender
+	address := "0x" + hex.EncodeToString(sender[:])
+
+	var err error = nil
+	p.LedgerInfo, err = client.LedgerInfo()
+	require.Nil(t, err)
+	p.AccountData, err = client.GetAccount(address)
+	require.Nil(t, err)
+	p.GasPrice, err = client.EstimateGasPrice()
+	require.Nil(t, err)
+}
+
+func (p *transferParams) transferTo(receiver string, amount uint64) {
+	p.Receiver = receiver
+	p.Amount = amount
+}
+
+func (p *transferParams) generateTransactionBcs(t *testing.T) *txBuilder.RawTransaction {
+	moduleName, err := txBuilder.NewModuleIdFromString("0x1::coin")
+	require.Nil(t, err)
+	token, err := txBuilder.NewTypeTagStructFromString("0x1::aptos_coin::AptosCoin")
+	require.Nil(t, err)
+	toAddr, err := txBuilder.NewAccountAddressFromHex(p.Receiver)
+	require.Nil(t, err)
+	toAmountBytes := txBuilder.BCSSerializeBasicValue(p.Amount)
+	payload := txBuilder.TransactionPayloadEntryFunction{
+		ModuleName:   *moduleName,
+		FunctionName: "transfer",
+		TyArgs:       []txBuilder.TypeTag{*token},
+		Args: [][]byte{
+			toAddr[:], toAmountBytes,
+		},
+	}
+	return &txBuilder.RawTransaction{
+		Sender:                  p.SenderKey,
+		SequenceNumber:          p.AccountData.SequenceNumber,
+		Payload:                 payload,
+		MaxGasAmount:            2000,
+		GasUnitPrice:            p.GasPrice,
+		ExpirationTimestampSecs: p.LedgerInfo.LedgerTimestamp + 600,
+		ChainId:                 uint8(p.LedgerInfo.ChainId),
+	}
+}
+
+func (p *transferParams) generateTransactionJson() *aptostypes.Transaction {
+	amountString := strconv.FormatUint(p.Amount, 10)
+	payload := &aptostypes.Payload{
+		Type:          aptostypes.EntryFunctionPayload,
+		Function:      "0x1::coin::transfer",
+		TypeArguments: []string{"0x1::aptos_coin::AptosCoin"},
+		// Function:      "0x1::aptos_account::transfer",
+		// TypeArguments: []string{},
+		Arguments: []interface{}{
+			p.Receiver, amountString,
+		},
+	}
+	fromAddress := "0x" + hex.EncodeToString(p.SenderKey[:])
+	return &aptostypes.Transaction{
+		Sender:                  fromAddress,
+		SequenceNumber:          p.AccountData.SequenceNumber,
+		Payload:                 payload,
+		MaxGasAmount:            2000,
+		GasUnitPrice:            p.GasPrice,
+		ExpirationTimestampSecs: p.LedgerInfo.LedgerTimestamp + 600,
+	}
 }
