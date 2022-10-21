@@ -10,46 +10,53 @@ import (
 )
 
 const (
-	testnetRpc = "https://testnet.aptoslabs.com"
+	MainnetRestUrl = "https://fullnode.mainnet.aptoslabs.com"
+	TestnetRestUrl = "https://testnet.aptoslabs.com"
+	DevnetRestUrl  = "https://fullnode.devnet.aptoslabs.com"
+)
+
+const (
+	nftCreator = "0x305a97874974fdb9a7ba59dc7cab7714c8e8e00004ac887b6e348496e1981838"
+	nftOwner   = "0xa6de5dd7668e3c7b1d8b9d3679b12ed937423fdec5198524665fef3f4799498f"
+
+	nftCollectionName = "Aptos Names V1"
+	nftTokenNameOwned = "linmor.apt"
 )
 
 var (
-	restClient, _ = aptosclient.Dial(context.Background(), testnetRpc)
+	restClient, _ = aptosclient.Dial(context.Background(), MainnetRestUrl)
 	tokenClient   = NewTokenClient(restClient)
 )
 
 func TestGetCollectionData(t *testing.T) {
-	address := "0xabf3630d0532fef81dfe610dd4def095070d91e344d475051e1c49da5e6d51c3"
-	account, err := txnBuilder.NewAccountAddressFromHex(address)
+	account, err := txnBuilder.NewAccountAddressFromHex(nftCreator)
 	require.Nil(t, err)
 
-	data, err := tokenClient.GetCollectionData(*account, "Aptos Zero")
+	data, err := tokenClient.GetCollectionData(*account, nftCollectionName)
 	require.Nil(t, err)
 	t.Log(data)
 }
 
 func TestGetTokenData(t *testing.T) {
-	address := "0xabf3630d0532fef81dfe610dd4def095070d91e344d475051e1c49da5e6d51c3"
-	account, err := txnBuilder.NewAccountAddressFromHex(address)
+	account, err := txnBuilder.NewAccountAddressFromHex(nftCreator)
 	require.Nil(t, err)
 
-	data, err := tokenClient.GetTokenData(*account, "Aptos Zero", "Aptos Zero: 909587")
+	data, err := tokenClient.GetTokenData(*account, nftCollectionName, nftTokenNameOwned)
 	require.Nil(t, err)
 	t.Log(data)
 }
 
 func TestGetTokenForAccount(t *testing.T) {
-	owner, _ := txnBuilder.NewAccountAddressFromHex("0x559c26e61a74a1c40244212e768ab282a2cbe2ed679ad8421f7d5ebfb2b79fb5")
-
-	address := "0xabf3630d0532fef81dfe610dd4def095070d91e344d475051e1c49da5e6d51c3"
-	creator, err := txnBuilder.NewAccountAddressFromHex(address)
+	owner, err := txnBuilder.NewAccountAddressFromHex(nftOwner)
+	require.Nil(t, err)
+	creator, err := txnBuilder.NewAccountAddressFromHex(nftCreator)
 	require.Nil(t, err)
 
 	tokenId := TokenId{
 		TokenDataId: TokenDataId{
 			Creator:    creator.ToShortString(),
-			Collection: "Aptos Zero",
-			Name:       "Aptos Zero: 909587",
+			Collection: nftCollectionName,
+			Name:       nftTokenNameOwned,
 		},
 	}
 	data, err := tokenClient.GetTokenForAccount(*owner, tokenId)
@@ -58,7 +65,8 @@ func TestGetTokenForAccount(t *testing.T) {
 }
 
 func TestGetAllTokenForAccount(t *testing.T) {
-	owner, _ := txnBuilder.NewAccountAddressFromHex("0x559c26e61a74a1c40244212e768ab282a2cbe2ed679ad8421f7d5ebfb2b79fb5")
+	owner, err := txnBuilder.NewAccountAddressFromHex(nftOwner)
+	require.Nil(t, err)
 	nfts, err := tokenClient.GetAllTokenForAccount(*owner)
 	require.Nil(t, err)
 	t.Log(nfts)

@@ -204,49 +204,45 @@ func (c *TokenClient) GetAllTokenForAccount(account txnBuilder.AccountAddress) (
 	// 我们需要遍历该用户所有的交易，从中筛选出获得 NFT 的交易，再根据其中的 NFT 信息去查询详细的数据
 
 	owner := account.ToShortString()
+	const tokenDepositEvent = "0x3::token::DepositEvent"   // 存入
+	const tokenWithdrawEvent = "0x3::token::WithdrawEvent" // 转出
 
-	nfts := []*NFTInfo{}
-	existsNfts := make(map[string]bool, 0)
-	parseNftsFromTransactions := func(txns []aptostypes.Transaction) error {
-		for _, txn := range txns {
-			if !txn.Success {
+	nftsMap := make(map[string]*NFTInfo, 0) // 这一步执行之后的 info 里面，还未包含 tokenData
+	parseNftFromTransaction := func(txn aptostypes.Transaction) (err error) {
+		if !txn.Success {
+			return
+		}
+		for _, event := range txn.Events {
+			if event.Guid.AccountAddress != owner || (event.Type != tokenDepositEvent && event.Type != tokenWithdrawEvent) {
 				continue
 			}
-			for _, event := range txn.Events {
-				if event.Type != "0x3::token::DepositEvent" || event.Guid.AccountAddress != owner {
+			bytes, err := json.Marshal(event.Data)
+			if err != nil {
+				continue
+			}
+			token := Token{}
+			err = json.Unmarshal(bytes, &token)
+			if err != nil {
+				continue
+			}
+			tokenKey := token.Id.TokenDataId.identifier()
+			_, exists := nftsMap[tokenKey]
+			switch event.Type {
+			case tokenWithdrawEvent:
+				if exists {
+					delete(nftsMap, tokenKey)
+				}
+			case tokenDepositEvent:
+				if exists {
 					continue
 				}
-				bytes, err := json.Marshal(event.Data)
-				if err != nil {
-					continue
-				}
-				token := Token{}
-				err = json.Unmarshal(bytes, &token)
-				if err != nil {
-					continue
-				}
-				tokenInfo := token.Id.TokenDataId
-				if existsNfts[tokenInfo.identifier()] {
-					continue
-				}
-				creator, err := txnBuilder.NewAccountAddressFromHex(tokenInfo.Creator)
-				if err != nil {
-					continue
-				}
-
-				tokenData, err := c.GetTokenData(*creator, tokenInfo.Collection, tokenInfo.Name)
-				if err != nil {
-					return err
-				}
-
-				nft := NFTInfo{
-					TokenData:        tokenData,
-					TokenId:          &tokenInfo,
+				nft := &NFTInfo{
+					TokenData:        nil,
+					TokenId:          &token.Id.TokenDataId,
 					RelatedHash:      txn.Hash,
 					RelatedTimestamp: txn.Timestamp,
 				}
-				nfts = append(nfts, &nft)
-				existsNfts[tokenInfo.identifier()] = true
+				nftsMap[tokenKey] = nft
 			}
 		}
 		return nil
@@ -260,9 +256,11 @@ func (c *TokenClient) GetAllTokenForAccount(account txnBuilder.AccountAddress) (
 			return nil, err
 		}
 
-		err = parseNftsFromTransactions(txns)
-		if err != nil {
-			return nil, err
+		for _, txn := range txns {
+			err = parseNftFromTransaction(txn)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		if len(txns) < limit {
@@ -270,6 +268,21 @@ func (c *TokenClient) GetAllTokenForAccount(account txnBuilder.AccountAddress) (
 		} else {
 			offset = offset + limit
 		}
+	}
+
+	nfts := []*NFTInfo{}
+	for _, nft := range nftsMap {
+		tokenId := nft.TokenId
+		creator, err := txnBuilder.NewAccountAddressFromHex(tokenId.Creator)
+		if err != nil {
+			continue
+		}
+		tokenData, err := c.GetTokenData(*creator, tokenId.Collection, tokenId.Name)
+		if err != nil {
+			continue
+		}
+		nft.TokenData = tokenData
+		nfts = append(nfts, nft)
 	}
 
 	return nfts, nil
