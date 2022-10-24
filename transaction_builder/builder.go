@@ -160,6 +160,11 @@ func NewTransactionBuilderABI(abis [][]byte) (*TransactionBuilderABI, error) {
 }
 
 func (tb *TransactionBuilderABI) BuildTransactionPayload(function string, tyTags []string, args []any) (TransactionPayload, error) {
+	tag, err := NewTypeTagStructFromString(function)
+	if err != nil {
+		return nil, fmt.Errorf("Invalid function: %v", function)
+	}
+	function = fmt.Sprintf("%v::%v::%v", tag.Address.ToShortString(), tag.ModuleName, tag.Name)
 	scriptABI, ok := tb.ABIMap[function]
 	if !ok {
 		return nil, fmt.Errorf("Cannot find function: %v", function)
