@@ -2,6 +2,7 @@ package nft
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 
 	"github.com/coming-chat/go-aptos/aptosclient"
@@ -50,6 +51,10 @@ type TokenDataId struct {
 
 func (id *TokenDataId) identifier() string {
 	return id.Creator + id.Collection + id.Name
+}
+
+func (id *TokenDataId) String() string {
+	return fmt.Sprintf("{Creator:%v, Collection:%v, Name:%v}", id.Creator, id.Collection, id.Name)
 }
 
 type TokenId struct {
