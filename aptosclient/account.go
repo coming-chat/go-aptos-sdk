@@ -18,10 +18,15 @@ func (c *RestClient) GetAccount(address string) (res *aptostypes.AccountCoreData
 	return
 }
 
-func (c *RestClient) GetAccountResources(address string) (res []aptostypes.AccountResource, err error) {
+func (c *RestClient) GetAccountResources(address string, version uint64) (res []aptostypes.AccountResource, err error) {
 	req, err := http.NewRequest("GET", c.GetVersionedRpcUrl()+"/accounts/"+address+"/resources", nil)
 	if err != nil {
 		return
+	}
+	if version > 0 {
+		q := req.URL.Query()
+		q.Add("ledger_version", strconv.FormatUint(version, 10))
+		req.URL.RawQuery = q.Encode()
 	}
 	err = c.doReq(req, &res)
 	return
@@ -35,22 +40,33 @@ func (c *RestClient) GetAccountResource(address string, resourceType string, ver
 	res = &aptostypes.AccountResource{}
 	if version > 0 {
 		q := req.URL.Query()
-		q.Add("version", strconv.FormatUint(version, 10))
+		q.Add("ledger_version", strconv.FormatUint(version, 10))
 		req.URL.RawQuery = q.Encode()
 	}
 	err = c.doReq(req, &res)
 	return
 }
 
-func (c *RestClient) IsAccountHasResource(address string, resourceType string, version uint64) (bool, error) {
-	_, err := c.GetAccountResource(address, resourceType, version)
+// Variation of `GetAccountResource`: when specified resource is not found (error with code 404), this will return `nil` result and `nil` error
+func (c *RestClient) GetAccountResourceHandle404(address, resourceType string, version uint64) (res *aptostypes.AccountResource, err error) {
+	res, err = c.GetAccountResource(address, resourceType, version)
 	if err == nil {
-		return true, nil
+		return res, nil
 	}
 	if e := err.(*aptostypes.RestError); e != nil && e.Code == 404 {
-		return false, nil
+		return nil, nil
+	} else {
+		return nil, err
 	}
-	return false, err
+}
+
+func (c *RestClient) IsAccountHasResource(address string, resourceType string, version uint64) (bool, error) {
+	res, err := c.GetAccountResourceHandle404(address, resourceType, version)
+	if err != nil {
+		return false, err
+	} else {
+		return res != nil, nil
+	}
 }
 
 func (c *RestClient) GetAccountModules(address string, version uint64) (res []aptostypes.MoveModule, err error) {
@@ -88,12 +104,12 @@ func (c *RestClient) AptosBalanceOf(address string) (balance *big.Int, err error
 
 func (c *RestClient) BalanceOf(address string, coinTag string) (balance *big.Int, err error) {
 	t := "0x1::coin::CoinStore<" + coinTag + ">"
-	res, err := c.GetAccountResource(address, t, 0)
+	res, err := c.GetAccountResourceHandle404(address, t, 0)
 	if err != nil {
-		if e := err.(*aptostypes.RestError); e != nil && e.Code == 404 {
-			return big.NewInt(0), nil
-		}
 		return nil, err
+	}
+	if res == nil {
+		return big.NewInt(0), nil
 	}
 	coin := res.Data["coin"].(map[string]interface{})
 	value := coin["value"].(string)
