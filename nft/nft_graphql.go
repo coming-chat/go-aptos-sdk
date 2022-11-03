@@ -6,10 +6,12 @@ import (
 	"github.com/coming-chat/go-aptos/graphql"
 )
 
+var where = `owner_address: {_eq: "%s"}, table_type: {_eq: "0x3::token::TokenStore"}, amount: {_gt: "0"}`
+
 const queryTokensFormat = `
 query CurrentTokens {
 	current_token_ownerships(
-	  where: {owner_address: {_eq: "%v"}, table_type: {_eq: "0x3::token::TokenStore"}, amount: {_gt: "0"}}
+	  where: {%s}
 	  order_by: {last_transaction_version: asc}
 	) {
 	  name
@@ -43,8 +45,15 @@ type GraphQLToken struct {
 }
 
 // @param graphUrl Default is mainnet url if unspecified
-func FetchGraphqlTokensOfOwner(owner string, graphUrl string) ([]GraphQLToken, error) {
-	query := fmt.Sprintf(queryTokensFormat, owner)
+func FetchGraphqlTokensOfOwner(owner, graphUrl, creatorAddress string) ([]GraphQLToken, error) {
+	var whereInfo = ""
+	if creatorAddress != "" {
+		where += `, creator_address: {_eq: "%s"}`
+		whereInfo = fmt.Sprintf(where, owner, creatorAddress)
+	} else {
+		whereInfo = fmt.Sprintf(where, owner)
+	}
+	query := fmt.Sprintf(queryTokensFormat, whereInfo)
 	res := struct {
 		Ownerships []GraphQLToken `json:"current_token_ownerships"`
 	}{}
