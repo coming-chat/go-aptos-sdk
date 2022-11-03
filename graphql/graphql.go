@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	// GraphUrlMainnet GraphUrlTestnet According to the https://aptos.dev/guides/indexing/#rate-limits. Both APIs are limited to 300 requests per IP per hour
 	GraphUrlMainnet = "https://indexer.mainnet.aptoslabs.com/v1/graphql"
 	GraphUrlTestnet = "https://indexer-testnet.staging.gcp.aptosdev.com/v1/graphql"
 )
@@ -30,7 +31,7 @@ type GraphQLResponse struct {
 	Data   json.RawMessage `json:"data,omitempty"`
 }
 
-// [GraphQL](https://cloud.hasura.io/public/graphiql?endpoint=https://indexer.mainnet.aptoslabs.com/v1/graphql)
+// FetchGraphQL [GraphQL](https://cloud.hasura.io/public/graphiql?endpoint=https://indexer.mainnet.aptoslabs.com/v1/graphql)
 // @param grahpUrl Default mainnet url `https://indexer.mainnet.aptoslabs.com/v1/graphql` if unspecified.
 func FetchGraphQL(operationsDoc, operationName string, variables map[string]interface{}, graphUrl string, out interface{}) error {
 	if graphUrl == "" {

@@ -44,7 +44,7 @@ type GraphQLToken struct {
 	} `json:"current_token_data"`
 }
 
-// @param graphUrl Default is mainnet url if unspecified
+// FetchGraphqlTokensOfOwner @param graphUrl Default is mainnet url if unspecified
 func FetchGraphqlTokensOfOwner(owner, graphUrl, creatorAddress string) ([]GraphQLToken, error) {
 	var whereInfo = ""
 	if creatorAddress != "" {
