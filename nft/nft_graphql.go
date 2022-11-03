@@ -6,28 +6,29 @@ import (
 	"github.com/coming-chat/go-aptos/graphql"
 )
 
-var where = `owner_address: {_eq: "%s"}, table_type: {_eq: "0x3::token::TokenStore"}, amount: {_gt: "0"}`
-
-const queryTokensFormat = `
-query CurrentTokens {
-	current_token_ownerships(
-	  where: {%s}
-	  order_by: {last_transaction_version: asc}
-	) {
-	  name
-	  collection_name
-	  property_version
-	  amount
-	  creator_address
-	  last_transaction_timestamp
-	  last_transaction_version
-	  owner_address
-	  current_token_data {
-		metadata_uri
-		description
-	  }
-	}
-  }`
+const (
+	queryTokensFormat = `
+	query CurrentTokens {
+		current_token_ownerships(
+		  where: {%s}
+		  order_by: {last_transaction_version: asc}
+		) {
+		  name
+		  collection_name
+		  property_version
+		  amount
+		  creator_address
+		  last_transaction_timestamp
+		  last_transaction_version
+		  owner_address
+		  current_token_data {
+			metadata_uri
+			description
+		  }
+		}
+	  }`
+	where = `owner_address: {_eq: "%s"}, table_type: {_eq: "0x3::token::TokenStore"}, amount: {_gt: "0"}`
+)
 
 type GraphQLToken struct {
 	Name                     string `json:"name"`
@@ -48,8 +49,7 @@ type GraphQLToken struct {
 func FetchGraphqlTokensOfOwner(owner, graphUrl, creatorAddress string) ([]GraphQLToken, error) {
 	var whereInfo = ""
 	if creatorAddress != "" {
-		where += `, creator_address: {_eq: "%s"}`
-		whereInfo = fmt.Sprintf(where, owner, creatorAddress)
+		whereInfo = fmt.Sprintf(where+`, creator_address: {_eq: "%s"}`, owner, creatorAddress)
 	} else {
 		whereInfo = fmt.Sprintf(where, owner)
 	}
