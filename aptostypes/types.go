@@ -175,6 +175,7 @@ type MoveScript struct {
 type MoveFunction struct {
 	Name              string        `json:"name"`
 	Visibility        string        `json:"visibility"` // public|script|friend
+	IsEntry           bool          `json:"is_entry"`
 	GenericTypeParams []interface{} `json:"generic_type_params"`
 	Params            []string      `json:"params"`
 	Return            []string      `json:"return"`

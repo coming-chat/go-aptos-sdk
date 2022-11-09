@@ -15,6 +15,9 @@ import (
 const (
 	Mnemonic        = "crack coil okay hotel glue embark all employ east impact stomach cigar"
 	ReceiverAddress = "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
+	MainnetRestUrl  = "https://fullnode.mainnet.aptoslabs.com"
+	TestnetRestUrl  = "https://testnet.aptoslabs.com"
+	DevnetRestUrl   = "https://fullnode.devnet.aptoslabs.com"
 	RestUrl         = "https://fullnode.devnet.aptoslabs.com/"
 )
 

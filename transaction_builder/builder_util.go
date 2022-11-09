@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/coming-chat/lcs"
@@ -228,9 +229,29 @@ func serializeArg(argVal any, argType TypeTag, encoder *lcs.Encoder) error {
 		if v, ok := argVal.(uint8); ok {
 			return encoder.Encode(v)
 		}
+		if v, ok := argVal.(int); ok && v == int(uint8(v)) {
+			return encoder.Encode(uint8(v))
+		}
+		if v, ok := argVal.(string); ok {
+			u, err := strconv.ParseUint(v, 10, 8)
+			if err != nil {
+				return err
+			}
+			return encoder.Encode(uint8(u))
+		}
 	case TypeTagU64:
 		if v, ok := argVal.(uint64); ok {
 			return encoder.Encode(v)
+		}
+		if v, ok := argVal.(int); ok && v >= 0 {
+			return encoder.Encode(uint64(v))
+		}
+		if v, ok := argVal.(string); ok {
+			u, err := strconv.ParseUint(v, 10, 64)
+			if err != nil {
+				return err
+			}
+			return encoder.Encode(u)
 		}
 	case TypeTagU128:
 		if v, ok := argVal.(Uint128); ok {
@@ -238,6 +259,14 @@ func serializeArg(argVal any, argType TypeTag, encoder *lcs.Encoder) error {
 		}
 		if v, ok := argVal.(*big.Int); ok {
 			return encoder.Encode(Uint128{v})
+		}
+		if v, ok := argVal.(int); ok && v >= 0 {
+			return encoder.Encode(Uint128{big.NewInt(int64(v))})
+		}
+		if v, ok := argVal.(string); ok {
+			if big, ok := big.NewInt(0).SetString(v, 10); ok {
+				return encoder.Encode(Uint128{big})
+			}
 		}
 	case TypeTagAddress:
 		if v, ok := argVal.(AccountAddress); ok {
