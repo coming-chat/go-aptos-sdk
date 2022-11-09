@@ -232,6 +232,9 @@ func serializeArg(argVal any, argType TypeTag, encoder *lcs.Encoder) error {
 		if v, ok := argVal.(int); ok && v == int(uint8(v)) {
 			return encoder.Encode(uint8(v))
 		}
+		if v, ok := argVal.(float64); ok && v == float64(uint8(v)) {
+			return encoder.Encode(uint8(v))
+		}
 		if v, ok := argVal.(string); ok {
 			u, err := strconv.ParseUint(v, 10, 8)
 			if err != nil {
@@ -244,6 +247,9 @@ func serializeArg(argVal any, argType TypeTag, encoder *lcs.Encoder) error {
 			return encoder.Encode(v)
 		}
 		if v, ok := argVal.(int); ok && v >= 0 {
+			return encoder.Encode(uint64(v))
+		}
+		if v, ok := argVal.(float64); ok && v >= 0 {
 			return encoder.Encode(uint64(v))
 		}
 		if v, ok := argVal.(string); ok {
@@ -261,6 +267,9 @@ func serializeArg(argVal any, argType TypeTag, encoder *lcs.Encoder) error {
 			return encoder.Encode(Uint128{v})
 		}
 		if v, ok := argVal.(int); ok && v >= 0 {
+			return encoder.Encode(Uint128{big.NewInt(int64(v))})
+		}
+		if v, ok := argVal.(float64); ok && v >= 0 {
 			return encoder.Encode(Uint128{big.NewInt(int64(v))})
 		}
 		if v, ok := argVal.(string); ok {

@@ -27,7 +27,12 @@ func TestTransactionBuilderRemoteABI(t *testing.T) {
 	payload2, err := builder.BuildTransactionPayload(function, type_arguments, arguments2)
 	require.Nil(t, err)
 
+	arguments3 := []any{float64(9), float64(0), true, 3, 0, true, 8, 0, false, float64(10000000), 694840} // some u8/u64 are float64, maybe seted from json.
+	payload3, err := builder.BuildTransactionPayload(function, type_arguments, arguments3)
+	require.Nil(t, err)
+
 	require.Equal(t, payload1, payload2)
+	require.Equal(t, payload1, payload3)
 }
 
 func TestIntToUintParse(t *testing.T) {
