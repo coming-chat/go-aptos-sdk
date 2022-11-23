@@ -127,6 +127,13 @@ func GenerateBCSTransaction(from *aptosaccount.Account, txn *RawTransaction) ([]
 	return builder.Sign(txn)
 }
 
+func GenerateBCSTransactionBatch(from *aptosaccount.Account, txn []*RawTransaction) ([]byte, error) {
+	builder := NewTransactionBuilderEd25519(func(sm SigningMessage) []byte {
+		return from.Sign(sm, "")
+	}, from.PublicKey)
+	return builder.SignBatch(txn)
+}
+
 func GenerateBCSSimulation(from ed25519.PublicKey, txn *RawTransaction) ([]byte, error) {
 	builder := NewTransactionBuilderEd25519(func(sm SigningMessage) []byte {
 		zero := [32]byte{}

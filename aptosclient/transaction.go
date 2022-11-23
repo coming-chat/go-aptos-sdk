@@ -128,6 +128,18 @@ func (c *RestClient) SubmitSignedBCSTransaction(signedTxn []byte) (res *aptostyp
 	return
 }
 
+func (c *RestClient) SubmitSignedBCSTransactionBatch(signedTxns []byte) (res *aptostypes.TransactionsBatchSubmissionResult, err error) {
+	req, err := http.NewRequest("POST", c.GetVersionedRpcUrl()+"/transactions/batch", bytes.NewReader(signedTxns))
+	if err != nil {
+		return
+	}
+	req.Header["Content-Type"] = []string{"application/x.aptos.signed_transaction+bcs"}
+
+	res = &aptostypes.TransactionsBatchSubmissionResult{}
+	err = c.doReq(req, res)
+	return
+}
+
 func (c *RestClient) SubmitTransaction(transaction *aptostypes.Transaction) (res *aptostypes.Transaction, err error) {
 	data, err := json.Marshal(transaction)
 	if err != nil {

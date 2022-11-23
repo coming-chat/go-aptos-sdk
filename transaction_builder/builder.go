@@ -50,9 +50,32 @@ func NewTransactionBuilderEd25519(signingFn SigningFunctionEd25519, publicKey []
 	return &TransactionBuilderEd25519{signingFn, publicKey}
 }
 
+func (b *TransactionBuilderEd25519) SignBatch(rawTxns []*RawTransaction) (data []byte, err error) {
+	signedTxs := make([]SignedTransaction, len(rawTxns))
+	for i, rawTxn := range rawTxns {
+		signedTx, err := b.signTx(rawTxn)
+		if err != nil {
+			return nil, err
+		}
+		signedTxs[i] = signedTx
+	}
+	data, err = lcs.Marshal(signedTxs)
+	return data, err
+}
+
 func (b *TransactionBuilderEd25519) Sign(rawTxn *RawTransaction) (data []byte, err error) {
+	signedTxn, err := b.signTx(rawTxn)
+	if err != nil {
+		return
+	}
+
+	data, err = lcs.Marshal(signedTxn)
+	return data, err
+}
+
+func (b *TransactionBuilderEd25519) signTx(rawTxn *RawTransaction) (data SignedTransaction, err error) {
 	if b.SigningFn == nil {
-		return nil, errors.New("Signing failed: you must specify a signing function")
+		return SignedTransaction{}, errors.New("Signing failed: you must specify a signing function")
 	}
 	signingMessage, err := rawTxn.GetSigningMessage()
 	if err != nil {
@@ -74,13 +97,10 @@ func (b *TransactionBuilderEd25519) Sign(rawTxn *RawTransaction) (data []byte, e
 		PublicKey: *publickey,
 		Signature: *signature,
 	}
-	signedTxn := SignedTransaction{
+	return SignedTransaction{
 		Transaction:   rawTxn,
 		Authenticator: authenticator,
-	}
-
-	data, err = lcs.Marshal(signedTxn)
-	return data, err
+	}, nil
 }
 
 // ------ TransactionBuilderMultiEd25519 ------

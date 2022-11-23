@@ -259,3 +259,18 @@ type CoinInfo struct {
 	Symbol   string
 	Name     string
 }
+
+type TransactionsBatchSubmissionResult struct {
+	TransactionFailures []TransactionsBatchSingleSubmissionFailure
+}
+
+type TransactionsBatchSingleSubmissionFailure struct {
+	TransactionIndex int
+	Error            AptosError
+}
+
+type AptosError struct {
+	Message     string
+	ErrorCode   string
+	VmErrorCode int
+}

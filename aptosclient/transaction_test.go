@@ -62,6 +62,59 @@ func TestTransferBCS(t *testing.T) {
 	t.Logf("submited tx hash = %v", newTxn.Hash)
 }
 
+func TestTransferBatch(t *testing.T) {
+	toAddress := "0xd408eeba43ada8ec52f1566518443950826450c16a079dfc11c2991b0f052f60"
+
+	client := Client(t, DevnetRestUrl)
+	account, err := aptosaccount.NewAccountWithMnemonic(Mnemonic)
+	require.Nil(t, err)
+
+	txns := make([]*txBuilder.RawTransaction, 0)
+	// 1
+	params1 := transferParams{}
+	params1.transferFrom(t, account.AuthKey, client)
+	params1.transferTo(toAddress, 100)
+	txns = append(txns, params1.generateTransactionBcs(t))
+
+	// 2
+	params2 := transferParams{}
+	params2.transferFrom(t, account.AuthKey, client)
+	params2.transferTo(toAddress, 200)
+	rawTx2 := params2.generateTransactionBcs(t)
+	rawTx2.SequenceNumber += 1
+	txns = append(txns, rawTx2)
+
+	// 3
+	params3 := transferParams{}
+	params3.transferFrom(t, account.AuthKey, client)
+	params3.transferTo(toAddress, 300)
+	rawTx3 := params3.generateTransactionBcs(t)
+	rawTx3.SequenceNumber += 2
+	txns = append(txns, rawTx3)
+	// 4
+	params4 := transferParams{}
+	params4.transferFrom(t, account.AuthKey, client)
+	params4.transferTo(toAddress, 400)
+	rawTx4 := params4.generateTransactionBcs(t)
+	rawTx4.SequenceNumber += 3
+	txns = append(txns, rawTx4)
+	// 5
+	params5 := transferParams{}
+	params5.transferFrom(t, account.AuthKey, client)
+	params5.transferTo(toAddress, 500)
+	rawTx5 := params5.generateTransactionBcs(t)
+	rawTx5.SequenceNumber += 4
+	txns = append(txns, rawTx5)
+
+	signedTxn, err := txBuilder.GenerateBCSTransactionBatch(account, txns)
+	require.Nil(t, err)
+
+	res, err := client.SubmitSignedBCSTransactionBatch(signedTxn)
+	require.Nil(t, err)
+
+	t.Logf("submited tx hash = %v", res.TransactionFailures)
+}
+
 func TestBCSEncoder(t *testing.T) {
 	toAddress := ReceiverAddress
 	amount := uint64(100)
