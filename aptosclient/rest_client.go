@@ -71,6 +71,35 @@ func (c *RestClient) LedgerInfo() (res *aptostypes.LedgerInfo, err error) {
 	return
 }
 
+func (c *RestClient) RawQuery(urlWithoutVersion string, params map[string]string) (data []byte, err error) {
+	urlWithoutVersion = "/" + strings.TrimPrefix(urlWithoutVersion, "/")
+	req, err := http.NewRequest("GET", c.GetVersionedRpcUrl()+urlWithoutVersion, nil)
+	if err != nil {
+		return
+	}
+	if params != nil {
+		q := req.URL.Query()
+		for k, v := range params {
+			q.Add(k, v)
+		}
+	}
+	resp, err := c.c.Do(req)
+	if err != nil {
+		return
+	}
+	data, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	if resp.StatusCode >= http.StatusBadRequest {
+		restError := &aptostypes.RestError{}
+		json.Unmarshal(data, &restError)
+		restError.Code = resp.StatusCode
+		return nil, restError
+	}
+	return
+}
+
 func (c *RestClient) setChainId() (err error) {
 	ledger, err := c.LedgerInfo()
 	if err != nil {
