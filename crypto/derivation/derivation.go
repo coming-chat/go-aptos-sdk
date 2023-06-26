@@ -30,7 +30,7 @@ var (
 	ErrInvalidPath        = errors.New("Invalid derivation path")
 	ErrNoPublicDerivation = errors.New("No public derivation for ed25519")
 
-	pathRegex = regexp.MustCompile(`^m(\/[0-9]+')+$`)
+	pathRegex = regexp.MustCompile(`^m(\/[0-9]+'?)+$`)
 )
 
 type Key struct {
