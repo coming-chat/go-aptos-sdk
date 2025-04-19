@@ -1,5 +1,7 @@
 package aptostypes
 
+import "encoding/json"
+
 const (
 	EntryFunctionPayload = "entry_function_payload"
 	ScriptPayload        = "script_payload"
@@ -223,10 +225,49 @@ type eventMarshaling struct {
 	Version        jsonUint64
 }
 
+type Value struct {
+	Type  string `json:"type"`  // set for `keyless` public keys
+	Value string `json:"value"` // hex-encoded public key
+}
+
+func (p *Value) UnmarshalJSON(data []byte) error {
+	// Try unmarshaling as string first, without type set.
+	var pubKeyStr string
+	if err := json.Unmarshal(data, &pubKeyStr); err == nil {
+		p.Value = pubKeyStr
+		return nil
+	}
+
+	// If not string, try as object
+	var objMap map[string]string
+	if err := json.Unmarshal(data, &objMap); err != nil {
+		return err
+	}
+
+	if val, ok := objMap["type"]; ok {
+		p.Type = val
+	}
+	if val, ok := objMap["value"]; ok {
+		p.Value = val
+	}
+	return nil
+}
+
+// If type is not set, serialize as raw string
+func (p *Value) MarshalJSON() ([]byte, error) {
+	if p.Type == "" {
+		return json.Marshal(p.Value)
+	}
+	return json.Marshal(map[string]string{
+		"type":  p.Type,
+		"value": p.Value,
+	})
+}
+
 type Signature struct {
 	Type      string `json:"type"`       // ed25519_signature|multi_ed25519_signature|multi_agent_signature
-	PublicKey string `json:"public_key"` // ed25519_signature
-	Signature string `json:"signature"`  // ed25519_signature
+	PublicKey Value  `json:"public_key"` // ed25519_signature
+	Signature Value  `json:"signature"`  // ed25519_signature
 
 	PublicKeys []string `json:"public_keys"` // multi_ed25519_signature
 	Signatures []string `json:"signatures"`  // multi_ed25519_signature
@@ -236,6 +277,9 @@ type Signature struct {
 	Sender                   *Signature  `json:"Sender"`                     // multi_agent_signature
 	SecondarySignerAddresses []string    `json:"secondary_signer_addresses"` // multi_agent_signature
 	SecondarySigners         []Signature `json:"secondary_signers"`          // multi_agent_signature
+
+	FeePayerAddress string     `json:"fee_payer_address"` // fee_payer
+	FeePayerSigner  *Signature `json:"fee_payer_signer"`  // fee_payer
 }
 
 //go:generate go run github.com/fjl/gencodec -type AccountCoreData -field-override AccountCoreDataMarshaling -out gen_account_core_json.go

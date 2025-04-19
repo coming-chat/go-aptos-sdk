@@ -92,8 +92,8 @@ func (c *RestClient) SimulateTransaction(transaction *aptostypes.Transaction, se
 	signatureHex := "0x" + hex.EncodeToString(signatureData)
 	transaction.Signature = &aptostypes.Signature{
 		Type:      "ed25519_signature",
-		PublicKey: senderPublicKey,
-		Signature: signatureHex,
+		PublicKey: aptostypes.Value{Value: senderPublicKey},
+		Signature: aptostypes.Value{Value: signatureHex},
 	}
 
 	data, err := json.Marshal(transaction)

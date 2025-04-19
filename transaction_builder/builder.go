@@ -38,6 +38,22 @@ func (t *MultiAgentRawTransaction) GetSigningMessage() (SigningMessage, error) {
 	return append(prefixBytes[:], msg...), nil
 }
 
+func (t *MultiAgentRawTransactionWithFeePayer) GetSigningMessage() (SigningMessage, error) {
+	prefixBytes := sha3.Sum256([]byte(RAW_TRANSACTION_WITH_DATA_SALT))
+	serialized, err := lcs.Marshal(t)
+	if err != nil {
+		return nil, err
+	}
+	// Copy the salt prefix
+	msg := make([]byte, len(prefixBytes)+1+len(serialized))
+	copy(msg[:], prefixBytes[:])
+	// Set the enumeration (1 for MultiAgentRawTransactionWithFeePayer)
+	msg[len(prefixBytes)] = 1
+	// Copy the serialized data
+	copy(msg[len(prefixBytes)+1:], serialized)
+	return msg, nil
+}
+
 // ------ TransactionBuilderEd25519 ------
 
 type SigningFunctionEd25519 func(SigningMessage) []byte

@@ -33,6 +33,7 @@ func init() {
 		(*RawTransactionWithData)(nil),
 
 		MultiAgentRawTransaction{},
+		MultiAgentRawTransactionWithFeePayer{},
 	)
 }
 
@@ -113,6 +114,12 @@ type RawTransactionWithData interface{}
 type MultiAgentRawTransaction struct {
 	RawTransaction           RawTransaction   `lcs:"raw_txn"`
 	SecondarySignerAddresses []AccountAddress `lcs:"secondary_signer_addresses"`
+}
+
+type MultiAgentRawTransactionWithFeePayer struct {
+	RawTransaction           RawTransaction   `lcs:"raw_txn"`
+	SecondarySignerAddresses []AccountAddress `lcs:"secondary_signer_addresses"`
+	FeePayerAddress          AccountAddress   `lcs:"fee_payer_address"`
 }
 
 type SignedTransaction struct {

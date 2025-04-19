@@ -9,6 +9,8 @@ func init() {
 		TransactionAuthenticatorEd25519{},
 		TransactionAuthenticatorMultiEd25519{},
 		TransactionAuthenticatorMultiAgent{},
+		TransactionAuthenticatorFeePayer{},
+		TransactionAuthenticatorSingleSender{},
 	)
 
 	lcs.RegisterEnum(
@@ -37,6 +39,18 @@ type TransactionAuthenticatorMultiAgent struct {
 	Sender                   AccountAuthenticator   `lcs:"sender"`
 	SecondarySignerAddresses []AccountAddress       `lcs:"secondary_signer_addresses"`
 	SecondarySigners         []AccountAuthenticator `lcs:"secondary_signers"`
+}
+
+type TransactionAuthenticatorFeePayer struct {
+	Sender                   AccountAuthenticator   `lcs:"sender"`
+	SecondarySignerAddresses []AccountAddress       `lcs:"secondary_signer_addresses"`
+	SecondarySigners         []AccountAuthenticator `lcs:"secondary_signers"`
+	FeePayerAddress          AccountAddress         `lcs:"fee_payer_address"`
+	FeePayerSigner           AccountAuthenticator   `lcs:"fee_payer_signer"`
+}
+
+type TransactionAuthenticatorSingleSender struct {
+	Sender AccountAuthenticator `lcs:"sender"`
 }
 
 // ------ AccountAuthenticator ------
